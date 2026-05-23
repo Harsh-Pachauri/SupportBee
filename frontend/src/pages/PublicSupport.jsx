@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPublicCompanyInfo, sendPublicChat } from '../services/chat.service.js';
 
+function getSessionKey(companySlug) {
+  return `supportbee:public-chat:${companySlug}`;
+}
+
 export default function PublicSupport() {
   const { companySlug } = useParams();
   const [company, setCompany] = useState(null);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [conversationId, setConversationId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,12 +29,38 @@ export default function PublicSupport() {
 
     if (companySlug) {
       loadCompany();
+
+      try {
+        const stored = sessionStorage.getItem(getSessionKey(companySlug));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (mounted) {
+            setConversationId(parsed.conversationId || '');
+            setMessages(Array.isArray(parsed.messages) ? parsed.messages : []);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to restore public chat session', err);
+      }
     }
 
     return () => {
       mounted = false;
     };
   }, [companySlug]);
+
+  useEffect(() => {
+    if (!companySlug) return;
+
+    try {
+      sessionStorage.setItem(
+        getSessionKey(companySlug),
+        JSON.stringify({ conversationId, messages })
+      );
+    } catch (err) {
+      console.warn('Failed to persist public chat session', err);
+    }
+  }, [companySlug, conversationId, messages]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -42,7 +73,15 @@ export default function PublicSupport() {
     setMessages((current) => [...current, { role: 'user', message: userMessage }]);
 
     try {
-      const result = await sendPublicChat(companySlug, { message: userMessage });
+      const result = await sendPublicChat(companySlug, {
+        message: userMessage,
+        conversationId: conversationId || undefined,
+      });
+
+      if (result?.conversationId) {
+        setConversationId(result.conversationId);
+      }
+
       setMessages((current) => [...current, { role: 'assistant', message: result.answer }]);
     } catch (err) {
       setError(err.message);
@@ -59,6 +98,7 @@ export default function PublicSupport() {
         <p className="hero-copy compact">
           Ask questions grounded only in this company&apos;s uploaded documents.
         </p>
+        {conversationId ? <p className="muted-line">Conversation session active: {conversationId}</p> : null}
 
         <div className="chat-thread">
           {messages.length === 0 ? <p className="muted-line">No messages yet.</p> : null}
