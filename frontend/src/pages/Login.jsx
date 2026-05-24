@@ -17,7 +17,7 @@ export default function Login() {
     try {
       const result = await loginCompany(form);
       storeSession(result);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -71,8 +71,7 @@ export default function Login() {
 
             <div id="login-alert" style={{ display: 'none', marginBottom: '1.25rem' }}></div>
 
-            {/* Using markup from login.html to match design exactly; use button onclick for sign-in to preserve layout */}
-            <div className="form" id="loginForm">
+            <form className="form" id="loginForm" onSubmit={handleSubmit}>
               <div className="field">
                 <label htmlFor="login-email">Email</label>
                 <input id="login-email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} type="email" placeholder="admin@yourcompany.com" autoComplete="email" />
@@ -84,16 +83,16 @@ export default function Login() {
 
               {error ? <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div> : null}
 
-              <button className="btn btn-primary btn-full btn-lg" id="loginBtn" onClick={handleSubmit} disabled={loading}>
+              <button className="btn btn-primary btn-full btn-lg" id="loginBtn" type="submit" disabled={loading}>
                 {loading ? <div className="spinner"></div> : 'Sign in'}
               </button>
 
               <div className="form-divider">or</div>
 
-              <button className="btn btn-ghost btn-full" onClick={() => { setForm({ email: 'admin@acme.com', password: 'password123' }); }}>
+              <button className="btn btn-ghost btn-full" type="button" onClick={() => { setForm({ email: 'admin@acme.com', password: 'password123' }); }}>
                 Fill demo credentials
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

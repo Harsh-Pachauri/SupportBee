@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredCompany, clearSession } from '../services/api.js';
-import { uploadDocument } from '../services/document.service.js';
+import { fetchDocuments, removeDocument, uploadDocument } from '../services/document.service.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -13,6 +13,9 @@ export default function Dashboard() {
   const [mainResult, setMainResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const mainFileRef = useRef(null);
+  const [documents, setDocuments] = useState([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [documentsError, setDocumentsError] = useState('');
 
   function setDashTab(tab, ev) {
     setActiveTab(tab);
@@ -80,6 +83,36 @@ export default function Dashboard() {
   function handleLogout() {
     clearSession();
     navigate('/login');
+  }
+
+  async function loadDocuments() {
+    setDocumentsLoading(true);
+    setDocumentsError('');
+
+    try {
+      const result = await fetchDocuments();
+      setDocuments(Array.isArray(result.documents) ? result.documents : []);
+    } catch (err) {
+      setDocuments([]);
+      setDocumentsError(err.message);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'documents') {
+      loadDocuments();
+    }
+  }, [activeTab]);
+
+  async function handleDeleteDocument(documentId) {
+    try {
+      await removeDocument(documentId);
+      await loadDocuments();
+    } catch (err) {
+      setDocumentsError(err.message);
+    }
   }
 
   return (
@@ -271,9 +304,57 @@ export default function Dashboard() {
                 <h1 className="dash-title">Documents</h1>
                 <p className="dash-sub">Manage your uploaded knowledge base</p>
               </div>
-              <div className="card" style={{maxWidth:640}}>
-                <div className="card-header"><div className="card-title">Document library</div><div className="tag tag-gray">coming soon</div></div>
-                <div className="docs-placeholder"><div className="docs-placeholder-icon">☰</div><div className="docs-placeholder-title">Document listing not yet implemented</div><div className="docs-placeholder-sub">GET /api/documents and DELETE /api/documents/:id currently return 501. Use the Upload tab to add documents.</div><div className="docs-coming-badge">501 · NOT IMPLEMENTED</div></div>
+              <div className="card" style={{maxWidth:900}}>
+                <div className="card-header">
+                  <div className="card-title">Document library</div>
+                  <div className="tag tag-gray">{documents.length} items</div>
+                </div>
+                <div className="card-body">
+                  {documentsLoading ? <p className="muted-line">Loading documents...</p> : null}
+                  {documentsError ? <p className="error-text">{documentsError}</p> : null}
+                  {!documentsLoading && !documentsError && documents.length === 0 ? (
+                    <div className="docs-placeholder" style={{padding:'2rem 1rem'}}>
+                      <div className="docs-placeholder-icon">☰</div>
+                      <div className="docs-placeholder-title">No documents uploaded yet</div>
+                      <div className="docs-placeholder-sub">Use the Upload tab to add PDFs. Once uploaded, they appear here automatically.</div>
+                    </div>
+                  ) : null}
+
+                  {documents.length > 0 ? (
+                    <div className="docs-grid">
+                      {documents.map((doc) => (
+                        <article className="doc-card" key={doc.id}>
+                          <div className="doc-card-top">
+                            <div className="doc-card-pdf">📄</div>
+                            <div className="doc-card-info">
+                              <div className="doc-card-name">{doc.file_name}</div>
+                              <div className="doc-card-date">{doc.created_at ? new Date(doc.created_at).toLocaleString() : ''}</div>
+                            </div>
+                          </div>
+                          <div className="doc-card-body">
+                            <div className="doc-card-chunks">
+                              <span className="doc-card-chunks-num">{doc.chunkCount ?? 0}</span>
+                              chunks indexed
+                            </div>
+                            <div className="doc-card-embed">
+                              <div className="doc-card-embed-fill" style={{ width: `${Math.min((doc.chunkCount ?? 0) * 8, 100)}%` }}></div>
+                            </div>
+                          </div>
+                          <div className="doc-card-footer">
+                            <div className="doc-card-status">
+                              <div className="status-dot"></div>
+                              {doc.status || 'ready'}
+                            </div>
+                            <div className="doc-card-actions">
+                              <button className="doc-action-btn" type="button" onClick={() => navigator.clipboard?.writeText(doc.storage_url || '')} title="Copy storage URL">⎘</button>
+                              <button className="doc-action-btn danger" type="button" onClick={() => handleDeleteDocument(doc.id)} title="Delete document">🗑</button>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           )}

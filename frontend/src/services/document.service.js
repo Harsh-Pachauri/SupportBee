@@ -14,3 +14,9 @@ export function uploadDocument(file) {
 export function fetchDocuments() {
   return requestJson('/api/documents');
 }
+
+export function removeDocument(documentId) {
+  return requestJson(`/api/documents/${documentId}`, {
+    method: 'DELETE',
+  });
+}

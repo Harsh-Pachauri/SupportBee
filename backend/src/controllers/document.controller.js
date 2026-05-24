@@ -73,20 +73,92 @@ export async function uploadDocument(req, res) {
   }
 }
 
-export function listDocuments(_req, res) {
-  const companyId = _req.companyId;
+export async function listDocuments(req, res) {
+  const companyId = req.companyId;
   if (!companyId) {
     return res.status(401).json({ message: 'Company context is required.' });
   }
 
-  res.status(501).json({ message: 'Document listing will be implemented next.', companyId });
+  try {
+    if (!supabase) {
+      return res.json({ documents: [] });
+    }
+
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id, company_id, file_name, storage_url, status, created_at')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const documents = Array.isArray(data) ? data : [];
+
+    const documentIds = documents.map((document) => document.id);
+    let chunkCounts = {};
+
+    if (documentIds.length > 0) {
+      const { data: chunkRows, error: chunkError } = await supabase
+        .from('document_chunks')
+        .select('document_id')
+        .eq('company_id', companyId)
+        .in('document_id', documentIds);
+
+      if (chunkError) {
+        throw chunkError;
+      }
+
+      chunkCounts = (chunkRows || []).reduce((accumulator, row) => {
+        const key = row.document_id;
+        accumulator[key] = (accumulator[key] || 0) + 1;
+        return accumulator;
+      }, {});
+    }
+
+    return res.json({
+      documents: documents.map((document) => ({
+        ...document,
+        chunkCount: chunkCounts[document.id] || 0,
+      })),
+    });
+  } catch (err) {
+    console.error('listDocuments error', err);
+    return res.status(500).json({ message: 'Failed to list documents', error: String(err) });
+  }
 }
 
-export function deleteDocument(_req, res) {
-  const companyId = _req.companyId;
+export async function deleteDocument(req, res) {
+  const companyId = req.companyId;
+  const documentId = req.params.id;
+
   if (!companyId) {
     return res.status(401).json({ message: 'Company context is required.' });
   }
 
-  res.status(501).json({ message: 'Document deletion will be implemented next.', companyId });
+  if (!documentId) {
+    return res.status(400).json({ message: 'Document id is required.' });
+  }
+
+  try {
+    if (!supabase) {
+      return res.json({ deleted: true, documentId, companyId, offline: true });
+    }
+
+    const { error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId)
+      .eq('company_id', companyId);
+
+    if (error) {
+      throw error;
+    }
+
+    return res.json({ deleted: true, documentId, companyId });
+  } catch (err) {
+    console.error('deleteDocument error', err);
+    return res.status(500).json({ message: 'Failed to delete document', error: String(err) });
+  }
 }
