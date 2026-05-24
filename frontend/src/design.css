@@ -1,0 +1,83 @@
+/* Design stylesheet exported from provided HTML template */
+/* Note: This file contains the main design CSS (fonts, colors, layout)
+   adapted from frontend_design_stuff/homepage_login_Register_Dashboard.html
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #0a0a0a;
+  --black-2: #111111;
+  --black-3: #1a1a1a;
+  --black-4: #222222;
+  --yellow: #f5c518;
+  --yellow-dim: #c9a010;
+  --yellow-glow: rgba(245, 197, 24, 0.12);
+  --yellow-glow-strong: rgba(245, 197, 24, 0.2);
+  --white: #ffffff;
+  --gray-1: #f7f6f2;
+  --gray-2: #e8e6df;
+  --gray-3: #b8b5ab;
+  --gray-4: #787570;
+  --gray-5: #4a4845;
+  --gray-6: #2e2d2a;
+  --border: rgba(255,255,255,0.07);
+  --border-yellow: rgba(245, 197, 24, 0.25);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body { background: var(--black); color: var(--white); font-family: var(--font-body); font-weight: 300; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+
+/* NAV */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+.nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em; cursor: pointer; text-decoration: none; color: var(--white); }
+.logo-mark { width: 30px; height: 30px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-weight: 400; font-size: 0.875rem; padding: 8px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: var(--transition); text-decoration: none; letter-spacing: 0.01em; white-space: nowrap; }
+.btn-ghost { background: transparent; color: var(--gray-3); border: 1px solid transparent; }
+.btn-outline { background: transparent; color: var(--yellow); border: 1px solid var(--border-yellow); }
+.btn-primary { background: var(--yellow); color: var(--black); border: 1px solid var(--yellow); font-weight: 500; }
+
+/* HERO */
+.hero { display:flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 2rem 80px; position: relative; }
+.hero-badge { display:inline-flex; align-items:center; gap:8px; background: var(--black-3); border:1px solid var(--border-yellow); border-radius:100px; padding:6px 14px; font-size:0.8rem; color:var(--yellow); font-family:var(--font-mono); }
+.hero h1 { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5.5rem); font-weight:800; line-height:1.05; letter-spacing:-0.03em; max-width:900px; margin-bottom:1.5rem; }
+.hero h1 em { font-style: normal; color: var(--yellow); }
+.hero-sub { font-size: 1.15rem; color: var(--gray-3); max-width:560px; line-height:1.7; margin-bottom:2.5rem; font-weight:300; }
+.hero-cta { display:flex; gap:14px; align-items:center; position:relative; z-index:1; }
+
+/* FEATURES */
+.features-strip { border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding: 5rem 2.5rem; background: var(--black-2); }
+.features-strip-inner { max-width:1100px; margin:0 auto; }
+.features-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:1.5px; background: var(--border); border-radius:var(--radius); overflow:hidden; }
+.feature-card { background: var(--black-2); padding:2rem; }
+.feature-icon { width:44px; height:44px; background: var(--yellow-glow); border:1px solid var(--border-yellow); border-radius: var(--radius-sm); display:flex; align-items:center; justify-content:center; margin-bottom:1.25rem; }
+.feature-card h3 { font-family: var(--font-display); font-size:1rem; font-weight:600; margin-bottom:0.6rem; }
+.feature-card p { font-size:0.875rem; color:var(--gray-4); line-height:1.65; }
+
+/* AUTH & DASHBOARD basics kept minimal to reuse existing UI */
+.auth-page { display:flex; gap: 2rem; align-items: stretch; padding-top:64px; }
+.auth-main { display:flex; align-items:center; justify-content:center; flex:1; }
+.auth-form-wrap { max-width:420px; width:100%; }
+
+.dashboard-layout { display:grid; grid-template-columns:260px 1fr; gap:20px; padding:100px 2rem 40px; }
+.sidebar { padding:20px; border-radius:18px; background: rgba(20,20,20,0.6); }
+.dash-main { padding:20px; border-radius:18px; }
+
+/* Chat thread styles (already present in App.css but ensure priority) */
+.chat-thread { display:grid; gap:12px; padding:16px; border-radius:18px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); min-height:160px; }
+
+/* Responsive */
+@media (max-width: 720px) {
+  .hero h1 { font-size: clamp(2rem, 8vw, 3rem); }
+  .dashboard-layout { grid-template-columns: 1fr; padding-top:80px; }
+}

@@ -91,34 +91,65 @@ export default function PublicSupport() {
   }
 
   return (
-    <main className="page-shell">
-      <section className="card support-card">
-        <p className="eyebrow">Public support page</p>
-        <h1>{company?.company_name || companySlug}</h1>
-        <p className="hero-copy compact">
-          Ask questions grounded only in this company&apos;s uploaded documents.
-        </p>
-        {conversationId ? <p className="muted-line">Conversation session active: {conversationId}</p> : null}
+    <div className="page active chat-page">
+      <div className="chat-ambient"></div>
+      <div className="chat-grid"></div>
 
-        <div className="chat-thread">
-          {messages.length === 0 ? <p className="muted-line">No messages yet.</p> : null}
-          {messages.map((entry, index) => (
-            <article key={`${entry.role}-${index}`} className={`chat-bubble ${entry.role}`}>
-              <strong>{entry.role}</strong>
-              <p>{entry.message}</p>
-            </article>
-          ))}
+      <header className="chat-header">
+        <div className="chat-header-brand">
+          <div className="chat-logo-mark">🐝</div>
+          <div>
+            <div className="chat-company-name">{company?.company_name || companySlug}</div>
+            <div className="chat-company-slug">/{company?.slug || companySlug}</div>
+          </div>
         </div>
+        <div className="chat-header-status">
+          <div className="status-chip"><div className="status-chip-dot"></div>Live</div>
+          <div className="powered-badge">Powered by <span>SupportBee</span></div>
+        </div>
+      </header>
 
-        <form onSubmit={handleSubmit} className="chat-form">
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows="4" placeholder="Ask about refunds, shipping, support..." />
-          <button className="primary-button" type="submit" disabled={loading}>
-            {loading ? 'Thinking...' : 'Send'}
-          </button>
-        </form>
+      <div className="chat-body" id="chat-body">
+        <div className="chat-inner">
+          {messages.length === 0 ? (
+            <div className="chat-welcome">
+              <div className="chat-welcome-icon">💬</div>
+              <h2>Welcome — ask me anything</h2>
+              <p>Ask questions grounded only in this company&apos;s uploaded documents.</p>
+              <div className="chat-welcome-chips">
+                <button type="button" className="chat-chip" onClick={() => { setMessage("What's your refund policy?"); }}>What's your refund policy?</button>
+                <button type="button" className="chat-chip" onClick={() => { setMessage('How do I reset my password?'); }}>How do I reset my password?</button>
+                <button type="button" className="chat-chip" onClick={() => { setMessage('Where do I track my order?'); }}>Where do I track my order?</button>
+                <button type="button" className="chat-chip" onClick={() => { setMessage('Do you offer free shipping?'); }}>Do you offer free shipping?</button>
+              </div>
+            </div>
+          ) : (
+            messages.map((m, i) => (
+              <div className={`msg-row ${m.role}`} key={i}>
+                <div className={`msg-avatar ${m.role==='user'?'user-av':'ai-av'}`}>{m.role==='user' ? 'U' : 'AI'}</div>
+                <div className="msg-bubble-wrap">
+                  <div className="msg-bubble">{m.message}</div>
+                  {m.sources && m.sources.length ? (
+                    <div className="msg-sources">
+                      {m.sources.map((s, idx) => <span className="source-tag" key={idx}>{s}</span>)}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-        {error ? <p className="error-text">{error}</p> : null}
-      </section>
-    </main>
+      <form className="chat-input-bar" onSubmit={handleSubmit}>
+        <div className="chat-input-inner">
+          <div className="chat-input-wrap">
+            <textarea id="chat-textarea" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask about your documents…" rows={1} />
+            <button className="chat-send-btn" type="submit" disabled={loading}>{loading ? '…' : '➤'}</button>
+          </div>
+          <div className="chat-footer-hint">Responses are generated from uploaded documents only.</div>
+        </div>
+      </form>
+    </div>
   );
 }

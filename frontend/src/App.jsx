@@ -1,42 +1,26 @@
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import './App.css';
+import '../src/styles/design.css';
+import './styles/chat.css';
+import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Documents from './pages/Documents.jsx';
 import PublicSupport from './pages/PublicSupport.jsx';
+import Components from './pages/Components.jsx';
+import Upload from './pages/Upload.jsx';
 import { clearSession, getStoredCompany } from './services/api.js';
-
-function Landing() {
-  return (
-    <main className="app-shell">
-      <section className="hero-card">
-        <p className="eyebrow">SupportBee</p>
-        <h1>Multi-tenant AI support, built as a V1 SaaS.</h1>
-        <p className="hero-copy">
-          Companies upload PDFs, the backend processes them into company-scoped chunks,
-          and customers use a public support page for grounded answers.
-        </p>
-
-        <div className="hero-actions">
-          <Link className="primary-button" to="/register">Create company</Link>
-          <Link className="secondary-button" to="/login">Sign in</Link>
-        </div>
-      </section>
-    </main>
-  );
-}
 
 function TopBar() {
   const company = getStoredCompany();
   const location = useLocation();
 
   return (
-    <header className="topbar">
-      <div>
-        <strong>SupportBee</strong>
-        <span>V1 backend-first build</span>
-      </div>
+    <header className="topbar" role="banner">
+      <a className="nav-logo" href="/" onClick={(e) => { e.preventDefault(); window.location.href = '/'; }}>
+        <span className="logo-mark">SB</span>
+        <span>SupportBee</span>
+      </a>
       <nav>
         <Link to="/dashboard" className={location.pathname === '/dashboard' ? 'active' : ''}>Dashboard</Link>
         <Link to="/documents" className={location.pathname === '/documents' ? 'active' : ''}>Documents</Link>
@@ -71,6 +55,14 @@ function App() {
       <Route
         path="/documents"
         element={company ? <><TopBar /><Documents /></> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/upload"
+        element={company ? <><TopBar /><Upload /></> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/components"
+        element={<><TopBar /><Components /></>}
       />
       <Route path="/support/:companySlug" element={<PublicSupport />} />
       <Route path="*" element={<Navigate to="/" replace />} />
