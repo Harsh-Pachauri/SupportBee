@@ -186,6 +186,8 @@ input.has-error { border-color: #c0392b; }
 .url-btn:hover { background: var(--black-5); color: var(--yellow); }
 .widget-embed-card-body { display: flex; flex-direction: column; gap: 10px; }
 .widget-embed-url-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.widget-embed-script-block { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.widget-embed-script-label { font-size: 0.72rem; font-family: var(--font-mono); color: var(--gray-4); text-transform: uppercase; letter-spacing: 0.08em; }
 .widget-embed-code {
   margin: 0;
   background: var(--black-4);

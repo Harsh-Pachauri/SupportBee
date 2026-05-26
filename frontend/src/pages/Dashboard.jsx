@@ -86,7 +86,7 @@ export default function Dashboard() {
   }
 
   function getWidgetUrl() {
-    return `${window.location.origin}/widget/${company?.slug || ''}`;
+    return `${window.location.origin}/widget/${company?.id || company?.slug || ''}`;
   }
 
   function getWidgetIframeCode() {
@@ -108,6 +108,19 @@ export default function Dashboard() {
 
   function copyWidgetEmbedCode() {
     navigator.clipboard?.writeText(getWidgetIframeCode());
+  }
+
+  function getWidgetScriptCode() {
+    return [
+      '<script',
+      `  src="${window.location.origin}/widget.js"`,
+      `  data-company-id="${company?.id || ''}"`,
+      '></script>',
+    ].join('\n');
+  }
+
+  function copyWidgetScriptCode() {
+    navigator.clipboard?.writeText(getWidgetScriptCode());
   }
 
   function openSupportPage() {
@@ -391,6 +404,16 @@ export default function Dashboard() {
                   <div className="widget-embed-actions">
                     <button className="btn btn-outline" onClick={copyWidgetEmbedCode}>Copy iframe code</button>
                     <button className="btn btn-ghost" onClick={() => window.open(getWidgetUrl(), '_blank')}>Open widget</button>
+                  </div>
+
+                  <div className="widget-embed-script-block">
+                    <div className="widget-embed-script-label">Script launcher</div>
+                    <pre className="widget-embed-code">
+{getWidgetScriptCode()}
+                    </pre>
+                    <div className="widget-embed-actions">
+                      <button className="btn btn-outline" onClick={copyWidgetScriptCode}>Copy script code</button>
+                    </div>
                   </div>
                 </div>
               </div>

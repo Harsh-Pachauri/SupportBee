@@ -7,15 +7,29 @@ export async function getCompanyBySlug(companySlug) {
     return { id: null, slug: companySlug, company_name: companySlug };
   }
 
-  const { data, error } = await supabase
+  const bySlug = await supabase
     .from('companies')
     .select('id, slug, company_name')
     .eq('slug', companySlug)
     .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (bySlug.error) {
+    throw bySlug.error;
   }
 
-  return data ?? null;
+  if (bySlug.data) {
+    return bySlug.data;
+  }
+
+  const byId = await supabase
+    .from('companies')
+    .select('id, slug, company_name')
+    .eq('id', companySlug)
+    .maybeSingle();
+
+  if (byId.error) {
+    throw byId.error;
+  }
+
+  return byId.data ?? null;
 }
