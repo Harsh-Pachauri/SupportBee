@@ -85,6 +85,31 @@ export default function Dashboard() {
     navigator.clipboard?.writeText(url);
   }
 
+  function getWidgetUrl() {
+    return `${window.location.origin}/widget/${company?.slug || ''}`;
+  }
+
+  function getWidgetIframeCode() {
+    return [
+      '<iframe',
+      `  src="${getWidgetUrl()}"`,
+      '  width="400"',
+      '  height="700"',
+      '  style="border:0;border-radius:14px;overflow:hidden"',
+      '  loading="lazy"',
+      '  allow="clipboard-write"',
+      '></iframe>',
+    ].join('\n');
+  }
+
+  function copyWidgetUrl() {
+    navigator.clipboard?.writeText(getWidgetUrl());
+  }
+
+  function copyWidgetEmbedCode() {
+    navigator.clipboard?.writeText(getWidgetIframeCode());
+  }
+
   function openSupportPage() {
     const url = `/support/${company?.slug || ''}`;
     window.open(url, '_blank');
@@ -344,6 +369,28 @@ export default function Dashboard() {
                   <div className="url-actions">
                     <button className="url-btn" onClick={copyUrl}>⎘ Copy</button>
                     <button className="url-btn" onClick={openSupportPage}>↗ Open</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="url-card" style={{marginTop: '1rem'}}>
+                <div className="url-card-header">
+                  <div className="url-card-title">// Embed widget code</div>
+                  <div className="tag tag-yellow">v2 iframe</div>
+                </div>
+                <div className="widget-embed-card-body">
+                  <div className="widget-embed-url-row">
+                    <div className="url-text" style={{border: '1px solid var(--border)', borderRadius: '8px'}}>{getWidgetUrl()}</div>
+                    <button className="url-btn" onClick={copyWidgetUrl}>Copy URL</button>
+                  </div>
+
+                  <pre className="widget-embed-code">
+{getWidgetIframeCode()}
+                  </pre>
+
+                  <div className="widget-embed-actions">
+                    <button className="btn btn-outline" onClick={copyWidgetEmbedCode}>Copy iframe code</button>
+                    <button className="btn btn-ghost" onClick={() => window.open(getWidgetUrl(), '_blank')}>Open widget</button>
                   </div>
                 </div>
               </div>

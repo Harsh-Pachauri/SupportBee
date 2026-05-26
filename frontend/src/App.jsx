@@ -7,6 +7,7 @@ import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Documents from './pages/Documents.jsx';
 import PublicSupport from './pages/PublicSupport.jsx';
+import WidgetSupport from './pages/WidgetSupport.jsx';
 import Components from './pages/Components.jsx';
 import Upload from './pages/Upload.jsx';
 import { clearSession, getStoredCompany } from './services/api.js';
@@ -65,6 +66,7 @@ function App() {
         element={<><TopBar /><Components /></>}
       />
       <Route path="/support/:companySlug" element={<PublicSupport />} />
+      <Route path="/widget/:companyId" element={<WidgetSupport />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
