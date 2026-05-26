@@ -1,4 +1,5 @@
 import { supabase } from '../../db/supabase.js';
+import { isMissingColumnError } from './schemaCompatibility.js';
 
 function getMemoryLimit() {
   const value = Number.parseInt(process.env.CHAT_MEMORY_MESSAGES || '8', 10);
@@ -19,12 +20,24 @@ export async function getOrCreateConversation({ companyId, conversationId = null
   }
 
   if (conversationId) {
-    const { data: existingConversation, error: existingConversationError } = await supabase
+    let { data: existingConversation, error: existingConversationError } = await supabase
       .from('conversations')
-      .select('id, company_id, needs_human, created_at')
+      .select('id, company_id, needs_human, status, created_at')
       .eq('id', conversationId)
       .eq('company_id', companyId)
       .maybeSingle();
+
+    if (existingConversationError && isMissingColumnError(existingConversationError, 'status')) {
+      const fallback = await supabase
+        .from('conversations')
+        .select('id, company_id, needs_human, created_at')
+        .eq('id', conversationId)
+        .eq('company_id', companyId)
+        .maybeSingle();
+
+      existingConversation = fallback.data;
+      existingConversationError = fallback.error;
+    }
 
     if (existingConversationError) {
       throw existingConversationError;
@@ -37,11 +50,22 @@ export async function getOrCreateConversation({ companyId, conversationId = null
     console.warn(`Conversation ${conversationId} not found for company ${companyId}; creating a new isolated session.`);
   }
 
-  const { data: conversation, error } = await supabase
+  let { data: conversation, error } = await supabase
     .from('conversations')
-    .insert([{ company_id: companyId, needs_human: false }])
-    .select('id, company_id, needs_human, created_at')
+    .insert([{ company_id: companyId, needs_human: false, status: 'active' }])
+    .select('id, company_id, needs_human, status, created_at')
     .single();
+
+  if (error && isMissingColumnError(error, 'status')) {
+    const fallback = await supabase
+      .from('conversations')
+      .insert([{ company_id: companyId, needs_human: false }])
+      .select('id, company_id, needs_human, created_at')
+      .single();
+
+    conversation = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     throw error;
@@ -56,12 +80,24 @@ export async function getRecentConversationMessages({ companyId, conversationId,
     return { messages: [], skipped: true, source: 'offline' };
   }
 
-  const { data: conversation, error: conversationError } = await supabase
+  let { data: conversation, error: conversationError } = await supabase
     .from('conversations')
-    .select('id, company_id')
+    .select('id, company_id, needs_human, status')
     .eq('id', conversationId)
     .eq('company_id', companyId)
     .maybeSingle();
+
+  if (conversationError && isMissingColumnError(conversationError, 'status')) {
+    const fallback = await supabase
+      .from('conversations')
+      .select('id, company_id, needs_human')
+      .eq('id', conversationId)
+      .eq('company_id', companyId)
+      .maybeSingle();
+
+    conversation = fallback.data;
+    conversationError = fallback.error;
+  }
 
   if (conversationError) {
     throw conversationError;

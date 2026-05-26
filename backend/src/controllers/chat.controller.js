@@ -1,5 +1,5 @@
 import { runChat } from '../services/chat/chatFlow.js';
-import { supabase } from '../db/supabase.js';
+import { getCompanyConversationDetail, listCompanyConversations } from '../services/chat/conversationAdmin.js';
 
 export async function createChat(req, res) {
   try {
@@ -30,21 +30,15 @@ export async function listConversations(req, res) {
       return res.status(400).json({ message: 'companyId is required.' });
     }
 
-    if (!supabase) {
-      return res.json({ conversations: [], source: 'offline' });
-    }
+    const result = await listCompanyConversations({
+      companyId,
+      status: req.query.status,
+      escalatedOnly: req.query.escalatedOnly === 'true' || req.query.escalatedOnly === '1',
+      page: req.query.page,
+      limit: req.query.limit,
+    });
 
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('id, company_id, needs_human, created_at')
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    return res.json({ conversations: data ?? [], source: 'supabase' });
+    return res.json(result);
   } catch (err) {
     console.error('listConversations error', err);
     return res.status(500).json({ message: 'Failed to load conversations', error: String(err) });
@@ -59,33 +53,13 @@ export async function getConversation(req, res) {
     return res.status(400).json({ message: 'id and companyId are required.' });
   }
 
-  if (!supabase) {
-    return res.json({ conversation: null, messages: [], source: 'offline' });
-  }
-
   try {
-    const { data: conversation, error: conversationError } = await supabase
-      .from('conversations')
-      .select('id, company_id, needs_human, created_at')
-      .eq('id', id)
-      .eq('company_id', companyId)
-      .maybeSingle();
+    const result = await getCompanyConversationDetail({
+      companyId,
+      conversationId: id,
+    });
 
-    if (conversationError) {
-      throw conversationError;
-    }
-
-    const { data: messages, error: messagesError } = await supabase
-      .from('messages')
-      .select('id, conversation_id, role, message, confidence_score, created_at')
-      .eq('conversation_id', id)
-      .order('created_at', { ascending: true });
-
-    if (messagesError) {
-      throw messagesError;
-    }
-
-    return res.json({ conversation, messages: messages ?? [], source: 'supabase' });
+    return res.json(result);
   } catch (err) {
     console.error('getConversation error', err);
     return res.status(500).json({ message: 'Failed to load conversation', error: String(err) });

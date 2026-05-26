@@ -1,6 +1,14 @@
+import { ragDebug } from '../../utils/ragDebug.js';
+
 const DEFAULT_PROVIDER = process.env.EMBEDDING_PROVIDER || 'local';
 let provider = null;
 let providerName = DEFAULT_PROVIDER;
+let loggedEmbeddingMetadata = false;
+
+function getConfiguredEmbeddingDimensions() {
+  const value = Number.parseInt(process.env.EMBEDDING_DIM || '384', 10);
+  return Number.isFinite(value) && value > 0 ? value : 384;
+}
 
 function deterministicVector(text, dim = 384) {
   // simple deterministic pseudo-random generator based on text
@@ -43,15 +51,23 @@ export async function initEmbeddingProvider() {
     if (provider && provider.init) {
       await provider.init();
     }
-    console.log(`Embedding provider initialized: ${providerName}`);
+    ragDebug('Embeddings', 'Provider initialized', {
+      provider: providerName,
+      vectorDimensionHint: getConfiguredEmbeddingDimensions(),
+      fallback: false,
+    });
   } catch (err) {
     console.warn(`Failed to load embedding provider ${providerName}:`, err && err.message ? err.message : err);
     if (providerName !== 'local') {
-      console.log('Falling back to local provider.');
       try {
         provider = await import('./providers/local.js');
         if (provider && provider.init) await provider.init();
         providerName = 'local';
+        ragDebug('Embeddings', 'Provider fallback applied', {
+          provider: providerName,
+          vectorDimensionHint: 384,
+          fallback: true,
+        });
       } catch (e) {
         console.warn('Failed to load local provider fallback:', e && e.message ? e.message : e);
         provider = null;
@@ -68,14 +84,42 @@ export async function generateEmbedding(text) {
   if (provider && provider.embed) {
     try {
       const vec = await provider.embed(text);
-      if (Array.isArray(vec)) return vec;
+      if (Array.isArray(vec)) {
+        if (!loggedEmbeddingMetadata) {
+          loggedEmbeddingMetadata = true;
+          ragDebug('Embeddings', 'Vector generated', {
+            provider: providerName,
+            vectorDimensions: vec.length,
+            source: providerName === 'local' ? 'local-model' : providerName,
+          });
+        }
+
+        return vec;
+      }
+      ragDebug('Embeddings', 'Provider output rejected', {
+        provider: providerName,
+        rawType: vec?.constructor?.name || typeof vec,
+        arrayIsArray: Array.isArray(vec),
+        reason: 'non-array result after normalization',
+      });
       console.warn('Embedding provider returned non-array result, using deterministic fallback.');
     } catch (err) {
       console.warn(`Embedding provider ${providerName} failed:`, err && err.message ? err.message : err);
     }
   }
   // fallback deterministic 384-dim vector to match MiniLM
-  return deterministicVector(text, 384);
+  const vec = deterministicVector(text, 384);
+
+  if (!loggedEmbeddingMetadata) {
+    loggedEmbeddingMetadata = true;
+    ragDebug('Embeddings', 'Vector generated', {
+      provider: providerName,
+      vectorDimensions: vec.length,
+      source: 'deterministic-fallback',
+    });
+  }
+
+  return vec;
 }
 
 export async function generateEmbeddingsBatch(texts) {

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getStoredCompany, clearSession } from '../services/api.js';
 import { fetchDocuments, removeDocument, uploadDocument } from '../services/document.service.js';
+import { fetchConversationDetail, fetchConversations } from '../services/conversation.service.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -16,6 +17,17 @@ export default function Dashboard() {
   const [documents, setDocuments] = useState([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
+  const [conversationFilter, setConversationFilter] = useState('all');
+  const [conversationPage, setConversationPage] = useState(1);
+  const [conversations, setConversations] = useState([]);
+  const [conversationMeta, setConversationMeta] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState('');
+  const [selectedConversationId, setSelectedConversationId] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
+  const [selectedConversationLoading, setSelectedConversationLoading] = useState(false);
+  const [selectedConversationError, setSelectedConversationError] = useState('');
 
   function setDashTab(tab, ev) {
     setActiveTab(tab);
@@ -100,11 +112,81 @@ export default function Dashboard() {
     }
   }
 
+  async function loadConversations(nextPage = conversationPage, nextFilter = conversationFilter) {
+    setConversationsLoading(true);
+    setConversationsError('');
+
+    try {
+      const result = await fetchConversations({
+        status: nextFilter,
+        page: nextPage,
+        limit: 10,
+        escalatedOnly: nextFilter === 'escalated',
+      });
+
+      const list = Array.isArray(result.conversations) ? result.conversations : [];
+      setConversations(list);
+      setConversationMeta(result.meta || { page: nextPage, limit: 10, total: list.length, totalPages: 1 });
+      setConversationPage(result.meta?.page ?? nextPage);
+
+      if (list.length > 0) {
+        const currentSelectedExists = list.some((conversation) => conversation.conversation_id === selectedConversationId);
+        if (!selectedConversationId || !currentSelectedExists) {
+          setSelectedConversationId(list[0].conversation_id);
+        }
+      } else {
+        setSelectedConversationId('');
+        setSelectedConversation(null);
+        setSelectedConversationMessages([]);
+      }
+    } catch (err) {
+      setConversations([]);
+      setConversationsError(err.message);
+    } finally {
+      setConversationsLoading(false);
+    }
+  }
+
+  async function loadConversationDetail(conversationId) {
+    if (!conversationId) {
+      setSelectedConversation(null);
+      setSelectedConversationMessages([]);
+      return;
+    }
+
+    setSelectedConversationLoading(true);
+    setSelectedConversationError('');
+
+    try {
+      const result = await fetchConversationDetail(conversationId);
+      setSelectedConversation(result.conversation || result.summary || null);
+      setSelectedConversationMessages(Array.isArray(result.messages) ? result.messages : []);
+    } catch (err) {
+      setSelectedConversation(null);
+      setSelectedConversationMessages([]);
+      setSelectedConversationError(err.message);
+    } finally {
+      setSelectedConversationLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'documents') {
       loadDocuments();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'conversations') {
+      loadConversations(conversationPage, conversationFilter);
+    }
+  }, [activeTab, conversationFilter, conversationPage]);
+
+  useEffect(() => {
+    if (activeTab === 'conversations' && selectedConversationId) {
+      loadConversationDetail(selectedConversationId);
+    }
+  }, [activeTab, selectedConversationId]);
 
   async function handleDeleteDocument(documentId) {
     try {
@@ -113,6 +195,28 @@ export default function Dashboard() {
     } catch (err) {
       setDocumentsError(err.message);
     }
+  }
+
+  function formatConversationTime(value) {
+    if (!value) return '—';
+    return new Date(value).toLocaleString();
+  }
+
+  function openConversation(conversationId) {
+    setSelectedConversationId(conversationId);
+  }
+
+  function changeConversationFilter(nextFilter) {
+    setConversationFilter(nextFilter);
+    setConversationPage(1);
+  }
+
+  function changeConversationPage(delta) {
+    setConversationPage((current) => {
+      const totalPages = conversationMeta.totalPages || 1;
+      const next = Math.min(Math.max(1, current + delta), totalPages);
+      return next;
+    });
   }
 
   return (
@@ -135,6 +239,7 @@ export default function Dashboard() {
             <button className={`sidebar-item ${activeTab==='overview'?'active':''}`} onClick={() => setDashTab('overview')}>▦ Overview</button>
             <button className={`sidebar-item ${activeTab==='upload'?'active':''}`} onClick={() => setDashTab('upload')}>↑ Upload docs</button>
             <button className={`sidebar-item ${activeTab==='documents'?'active':''}`} onClick={() => setDashTab('documents')}>☰ Documents</button>
+            <button className={`sidebar-item ${activeTab==='conversations'?'active':''}`} onClick={() => setDashTab('conversations')}>☍ Conversations</button>
           </div>
           <div className="sidebar-section">
             <div className="sidebar-label">Support</div>
@@ -370,6 +475,167 @@ export default function Dashboard() {
                 <div style={{borderTop:'1px solid var(--border)',padding:'1rem 1.25rem',display:'flex',gap:10}}>
                   <input type="text" id="chat-input" placeholder="Ask about your documents…" style={{flex:1}} onKeyDown={(e)=>{ if(e.key==='Enter'){ /* sendChat placeholder */ } }} />
                   <button className="btn btn-primary" id="chat-send-btn">Send</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'conversations' && (
+            <div id="dash-tab-conversations">
+              <div className="dash-header">
+                <div className="dash-welcome">Human-in-the-loop</div>
+                <h1 className="dash-title">Conversations</h1>
+                <p className="dash-sub">Review company-scoped support chats, confidence, and escalation state</p>
+              </div>
+
+              <div className="card" style={{marginBottom:'1rem'}}>
+                <div className="card-header">
+                  <div className="card-title">Conversation review panel</div>
+                  <div className="tag tag-gray">read-only</div>
+                </div>
+                <div className="card-body">
+                  <div className="conversation-toolbar">
+                    <div className="conversation-filter-row">
+                      {['all', 'active', 'escalated', 'resolved'].map((filter) => (
+                        <button
+                          key={filter}
+                          type="button"
+                          className={`filter-pill ${conversationFilter === filter ? 'active' : ''}`}
+                          onClick={() => changeConversationFilter(filter)}
+                        >
+                          {filter}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="conversation-count">
+                      {conversationMeta.total || 0} conversations · page {conversationMeta.page || 1} of {conversationMeta.totalPages || 1}
+                    </div>
+                  </div>
+
+                  {conversationsError ? <p className="error-text">{conversationsError}</p> : null}
+
+                  <div className="conversation-shell">
+                    <div className="card">
+                      <div className="card-header">
+                        <div className="card-title">Conversation list</div>
+                        <div className="tag tag-yellow">company scoped</div>
+                      </div>
+                      <div className="card-body">
+                        {conversationsLoading ? <p className="muted-line">Loading conversations...</p> : null}
+                        {!conversationsLoading && conversations.length === 0 && !conversationsError ? (
+                          <div className="conversation-placeholder">
+                            <h3>No conversations yet</h3>
+                            <p>When customers send messages, the latest conversations and their confidence signals will appear here.</p>
+                          </div>
+                        ) : null}
+
+                        <div className="conversation-list">
+                          {conversations.map((conversation) => (
+                            <button
+                              key={conversation.conversation_id}
+                              type="button"
+                              className={`conversation-item ${selectedConversationId === conversation.conversation_id ? 'active' : ''}`}
+                              onClick={() => openConversation(conversation.conversation_id)}
+                            >
+                              <div className="conversation-item-top">
+                                <div>
+                                  <div className="conversation-id">{conversation.conversation_id}</div>
+                                  <div className="conversation-preview">{conversation.latest_message_preview || 'No messages yet'}</div>
+                                </div>
+                                <div className={`conversation-status ${conversation.status || 'active'}`}>
+                                  <span className="conversation-status-dot"></span>
+                                  {conversation.status || 'active'}
+                                </div>
+                              </div>
+
+                              <div className="conversation-meta-row">
+                                <div className="conversation-badges">
+                                  <span className="tag tag-gray">{conversation.message_count || 0} messages</span>
+                                  {conversation.needs_human ? <span className="tag tag-yellow">escalated</span> : null}
+                                  {conversation.latest_confidence_level ? (
+                                    <span className={`confidence-badge ${conversation.latest_confidence_level}`}>
+                                      {conversation.latest_confidence_level}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <div className="conversation-meta">Updated {formatConversationTime(conversation.updated_at)}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginTop:'1rem',flexWrap:'wrap'}}>
+                          <button className="btn btn-ghost" type="button" onClick={() => loadConversations(conversationPage, conversationFilter)}>
+                            Refresh
+                          </button>
+                          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                            <button className="btn btn-ghost" type="button" disabled={conversationPage <= 1} onClick={() => changeConversationPage(-1)}>
+                              Prev
+                            </button>
+                            <button className="btn btn-ghost" type="button" disabled={conversationPage >= (conversationMeta.totalPages || 1)} onClick={() => changeConversationPage(1)}>
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="card conversation-detail">
+                      <div className="card-header">
+                        <div className="card-title">Conversation detail</div>
+                        <div className="tag tag-gray">review only</div>
+                      </div>
+                      <div className="card-body">
+                        {selectedConversationLoading ? <p className="muted-line">Loading conversation detail...</p> : null}
+                        {selectedConversationError ? <p className="error-text">{selectedConversationError}</p> : null}
+                        {!selectedConversationLoading && !selectedConversation && !selectedConversationError ? (
+                          <div className="conversation-placeholder">
+                            <h3>Select a conversation</h3>
+                            <p>Pick a conversation on the left to inspect the full message history, confidence score, and escalation state.</p>
+                          </div>
+                        ) : null}
+
+                        {selectedConversation ? (
+                          <>
+                            <div className="conversation-detail-header">
+                              <div className="conversation-id">{selectedConversation.conversation_id}</div>
+                              <div className="conversation-detail-meta">
+                                <span className={`confidence-badge ${selectedConversation.latest_confidence_level || 'low'}`}>
+                                  confidence {selectedConversation.latest_confidence_level || 'low'}
+                                </span>
+                                <span className="tag tag-gray">{selectedConversation.message_count || 0} messages</span>
+                                <span className={selectedConversation.needs_human ? 'tag tag-yellow' : 'tag tag-gray'}>
+                                  {selectedConversation.needs_human ? 'escalated' : 'active'}
+                                </span>
+                                <span className="tag tag-gray">Created {formatConversationTime(selectedConversation.created_at)}</span>
+                                <span className="tag tag-gray">Updated {formatConversationTime(selectedConversation.updated_at)}</span>
+                              </div>
+                              <div className="conversation-preview">{selectedConversation.latest_message_preview || 'No recent preview available.'}</div>
+                            </div>
+
+                            <div className="conversation-message-list">
+                              {selectedConversationMessages.map((message) => (
+                                <article key={message.id} className={`conversation-message ${message.role}`}>
+                                  <div className="conversation-message-top">
+                                    <div className="conversation-message-role">{message.role}</div>
+                                    <div className="conversation-message-time">{formatConversationTime(message.created_at)}</div>
+                                  </div>
+                                  <div className="conversation-message-body">{message.message}</div>
+                                  {message.role === 'assistant' && message.confidence_score !== null && message.confidence_score !== undefined ? (
+                                    <div className="conversation-message-footer">
+                                      <div className={`conversation-message-confidence ${message.confidence_score >= 0.8 ? 'high' : message.confidence_score >= 0.6 ? 'medium' : 'low'}`}>
+                                        confidence {Number(message.confidence_score).toFixed(2)}
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                </article>
+                              ))}
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
