@@ -1,8 +1,14 @@
 # 🐝 SupportBee
 
-SupportBee is a multi-tenant RAG-based AI customer support platform that enables companies to upload internal documents and instantly create AI-powered support assistants grounded in their own knowledge base.
+SupportBee is a multi-tenant AI customer support infrastructure platform that enables companies to upload documents, instantly create AI-powered support assistants, and embed them directly into websites using floating support widgets or iframe integrations.
 
-Built with semantic retrieval, conversational memory, confidence-aware responses, escalation workflows, and pgvector-powered search.
+Built with semantic retrieval, conversational memory, confidence-aware responses, escalation workflows, embeddable widgets, and pgvector-powered search.
+
+---
+
+# 🌐 Live Demo
+
+https://support-bee.vercel.app/
 
 ---
 
@@ -15,6 +21,8 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 * Semantic embeddings
 * Vector similarity retrieval
 * Grounded AI responses
+* Multi-document knowledge retrieval
+* Local embedding generation for cost-efficient deployment
 
 ---
 
@@ -24,6 +32,8 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 * Tenant-safe retrieval
 * Separate document knowledge bases
 * Scoped conversations and embeddings
+* Company-specific AI assistants
+* Secure company-scoped chat systems
 
 ---
 
@@ -33,15 +43,18 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 * Follow-up question support
 * Persistent chat history
 * Session-aware context retrieval
+* Independent customer sessions
 
 ---
 
-## 📈 Confidence Scoring
+## 📈 Confidence Scoring System
 
 * Retrieval similarity scoring
 * Confidence classification
 * Confidence-aware responses
+* Escalation triggers
 * Retrieval observability logs
+* Semantic retrieval debugging pipeline
 
 ---
 
@@ -49,6 +62,9 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 
 * Automatic escalation for low-confidence responses
 * Escalated conversation tracking
+* Human follow-up request system
+* Contact capture workflow
+* Conversation resolution flow
 * Human-review-ready architecture
 
 ---
@@ -59,6 +75,50 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 * Escalation visibility
 * Conversation inspection
 * Confidence monitoring
+* Support request tracking
+* Resolution status management
+
+---
+
+## 🌐 Embeddable AI Chat Widgets
+
+### iframe Embedding
+
+```html
+<iframe
+  src="https://support-bee.vercel.app/widget/company-id"
+  width="400"
+  height="700"
+></iframe>
+```
+
+### Script-Based Floating Widget
+
+```html
+<script
+  src="https://support-bee.vercel.app/widget.js"
+  data-company-id="company-id"
+></script>
+```
+
+Features:
+
+* Floating launcher button
+* Overlay chat interface
+* Mobile-friendly widget
+* Session persistence
+* Company-scoped conversations
+* Embedded conversational memory
+
+---
+
+## 🎨 Chatbot Customization
+
+* Custom chatbot names
+* Welcome messages
+* Theme/accent colors
+* Widget branding support
+* Company-specific chatbot identity
 
 ---
 
@@ -87,6 +147,12 @@ Built with semantic retrieval, conversational memory, confidence-aware responses
 * Groq LLM API
 * LangChain JS
 
+## Deployment
+
+* Vercel (Frontend)
+* Render (Backend)
+* Supabase (Database + Storage)
+
 ---
 
 # 🧠 Architecture Overview
@@ -105,7 +171,27 @@ Confidence Scoring
         ↓
 Escalation Decision
         ↓
+Human Follow-up Workflow
+        ↓
 LLM Response
+```
+
+---
+
+# 🧩 Widget Architecture
+
+```text
+widget.js
+    ↓
+Floating Launcher Button
+    ↓
+Inject Hidden iframe
+    ↓
+/widget/:companyId
+    ↓
+Existing Chat APIs
+    ↓
+RAG + Memory + Escalation
 ```
 
 ---
@@ -138,6 +224,7 @@ backend/src/
 │    ├── retrieval/
 │    ├── embeddings/
 │    ├── llm/
+│    ├── widget/
 │    └── chat/
 ├── middleware/
 ├── db/
@@ -154,19 +241,13 @@ backend/src/
 ✅ Conversational memory
 ✅ Confidence scoring
 ✅ Escalation workflows
+✅ Human follow-up/contact flow
 ✅ Multi-tenant isolation
 ✅ Admin conversation panel
-
----
-
-# 🚧 Planned Features
-
-* Embeddable iframe chat widget
-* Source citations
-* Analytics dashboard
-* Chatbot customization
-* Human resolution workflow
-* Streaming responses
+✅ Embeddable iframe widget
+✅ Script-based floating support widget
+✅ Company chatbot customization
+✅ Session-aware customer conversations
 
 ---
 
@@ -180,22 +261,8 @@ SupportBee focuses heavily on:
 * scalable RAG architecture
 * multi-tenant SaaS design
 * AI infrastructure engineering
-
----
-
-# 🚀 Deployment
-
-## Frontend
-
-Vercel
-
-## Backend
-
-Render
-
-## Database
-
-Supabase
+* embeddable support systems
+* human-in-the-loop AI workflows
 
 ---
 
@@ -205,17 +272,32 @@ Supabase
 * pgvector retrieval requires matching embedding dimensions
 * Confidence thresholds calibrated for MiniLM embeddings
 * Large multi-topic PDFs recommended for realistic RAG testing
+* Widget system uses iframe isolation for styling/security safety
 
 ---
 
-# 📌 Future Vision
+# 🚀 Future Roadmap
+
+* Source citations
+* Analytics dashboard
+* Streaming responses
+* Email notifications
+* Slack integrations
+* Advanced chunking strategies
+* Hybrid semantic + keyword retrieval
+* Human agent takeover system
+
+---
+
+# 📌 Vision
 
 SupportBee is designed as a foundation for:
 
 * embeddable AI support agents
+* AI-powered customer support infrastructure
 * enterprise support automation
 * human-in-the-loop escalation systems
-* AI support infrastructure
+* scalable multi-tenant AI SaaS products
 
 ---
 
@@ -225,4 +307,6 @@ SupportBee is designed as a foundation for:
 * RAG engineering
 * SaaS system design
 * production-style AI workflows
+* semantic retrieval systems
 * portfolio/interview demonstrations
+* embeddable AI platform architecture
