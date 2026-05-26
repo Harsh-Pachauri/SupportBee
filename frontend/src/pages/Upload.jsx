@@ -6,11 +6,13 @@ export default function Upload() {
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingFileName, setUploadingFileName] = useState('');
   const fileRef = useRef(null);
 
   async function handleFile(file) {
     if (!file) return;
     setLoading(true);
+    setUploadingFileName(file.name);
     setResult(null);
     try {
       const res = await uploadDocument(file);
@@ -19,6 +21,7 @@ export default function Upload() {
       setResult({ fileName: file.name, chunks: 0, status: err.message });
     } finally {
       setLoading(false);
+      setUploadingFileName('');
     }
   }
 
@@ -48,12 +51,27 @@ export default function Upload() {
         <section className="card" style={{maxWidth:720}}>
           <div className="card-header"><div className="card-title">Upload documents</div><div className="tag tag-yellow">PDF</div></div>
           <div className="card-body">
-            <div className={`upload-zone ${loading ? 'dragging' : ''}`} onDragOver={(e)=>e.preventDefault()} onDrop={onDrop}>
+            <div className={`upload-zone ${loading ? 'dragging uploading' : ''}`} onDragOver={(e)=>e.preventDefault()} onDrop={onDrop}>
               <input type="file" accept=".pdf" ref={fileRef} onChange={onFileInput} />
               <div className="upload-icon">📄</div>
               <div className="upload-title">Drag & drop a PDF</div>
               <div className="upload-sub">or click to browse</div>
               <div className="upload-types">Accepted: .pdf · max 50MB</div>
+
+              {loading ? (
+                <div className="upload-status-card">
+                  <div className="upload-status-row">
+                    <div className="spinner spinner-light"></div>
+                    <div>
+                      <div className="upload-status-title">Uploading document…</div>
+                      <div className="upload-status-sub">{uploadingFileName || 'Processing your PDF'}</div>
+                    </div>
+                  </div>
+                  <div className="upload-progress-track">
+                    <div className="upload-progress-bar"></div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className={`upload-result ${result ? 'visible' : ''}`} style={{marginTop:16}}>

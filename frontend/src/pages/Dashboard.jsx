@@ -13,7 +13,10 @@ export default function Dashboard() {
   // Quick upload state
   const [quickResult, setQuickResult] = useState(null);
   const [mainResult, setMainResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [quickUploadLoading, setQuickUploadLoading] = useState(false);
+  const [mainUploadLoading, setMainUploadLoading] = useState(false);
+  const [quickUploadingFileName, setQuickUploadingFileName] = useState('');
+  const [mainUploadingFileName, setMainUploadingFileName] = useState('');
   const mainFileRef = useRef(null);
   const [documents, setDocuments] = useState([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
@@ -42,7 +45,8 @@ export default function Dashboard() {
   async function handleQuickUpload(input) {
     const file = input.files?.[0] ?? null;
     if (!file) return;
-    setLoading(true);
+    setQuickUploadLoading(true);
+    setQuickUploadingFileName(file.name);
     setQuickResult(null);
     try {
       const result = await uploadDocument(file);
@@ -50,13 +54,15 @@ export default function Dashboard() {
     } catch (err) {
       setQuickResult({ fileName: file.name, chunks: 0, status: err.message });
     } finally {
-      setLoading(false);
+      setQuickUploadLoading(false);
+      setQuickUploadingFileName('');
     }
   }
 
   async function handleMainUploadFile(file) {
     if (!file) return;
-    setLoading(true);
+    setMainUploadLoading(true);
+    setMainUploadingFileName(file.name);
     setMainResult(null);
     try {
       const result = await uploadDocument(file);
@@ -64,7 +70,8 @@ export default function Dashboard() {
     } catch (err) {
       setMainResult({ fileName: file.name, chunks: 0, status: err.message });
     } finally {
-      setLoading(false);
+      setMainUploadLoading(false);
+      setMainUploadingFileName('');
     }
   }
 
@@ -464,12 +471,27 @@ export default function Dashboard() {
                     <div className="tag tag-yellow">PDF only</div>
                   </div>
                   <div className="card-body">
-                    <div id="quick-upload-zone" className={`upload-zone ${loading? 'dragging':''}`}>
+                    <div id="quick-upload-zone" className={`upload-zone ${quickUploadLoading ? 'dragging uploading' : ''}`}>
                       <input type="file" accept=".pdf" onChange={(e) => handleQuickUpload(e.target)} />
                       <div className="upload-icon">📄</div>
                       <div className="upload-title">Drop a PDF here</div>
                       <div className="upload-sub">or click to browse</div>
                       <div className="upload-types">Accepts: .pdf — max 50MB</div>
+
+                      {quickUploadLoading ? (
+                        <div className="upload-status-card">
+                          <div className="upload-status-row">
+                            <div className="spinner spinner-light"></div>
+                            <div>
+                              <div className="upload-status-title">Uploading document…</div>
+                              <div className="upload-status-sub">{quickUploadingFileName || 'Processing your PDF'}</div>
+                            </div>
+                          </div>
+                          <div className="upload-progress-track">
+                            <div className="upload-progress-bar"></div>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     <div className={`upload-result ${quickResult ? 'visible' : ''}`}>
                       <div className="result-row"><div className="result-label">File</div><div className="result-val" id="qr-filename">{quickResult?.fileName ?? '—'}</div></div>
@@ -496,12 +518,27 @@ export default function Dashboard() {
                   <div className="tag tag-yellow">multipart/form-data · field: file</div>
                 </div>
                 <div className="card-body">
-                  <div className="upload-zone" id="main-upload-zone" onDragOver={(e)=>e.preventDefault()} onDrop={handleDrop} onDragLeave={(e)=>{}}>
+                    <div className={`upload-zone ${mainUploadLoading ? 'dragging uploading' : ''}`} id="main-upload-zone" onDragOver={(e)=>e.preventDefault()} onDrop={handleDrop} onDragLeave={(e)=>{}}>
                     <input type="file" accept=".pdf" id="main-file-input" ref={mainFileRef} onChange={(e)=>handleMainUpload(e.target)} />
                     <div className="upload-icon">📄</div>
                     <div className="upload-title">Drag & drop your PDF</div>
                     <div className="upload-sub">or click to browse your files</div>
                     <div className="upload-types">Accepted: .pdf · Field name: <code style={{color:'var(--yellow)',fontFamily:'var(--font-mono)'}}>file</code></div>
+
+                      {mainUploadLoading ? (
+                        <div className="upload-status-card">
+                          <div className="upload-status-row">
+                            <div className="spinner spinner-light"></div>
+                            <div>
+                              <div className="upload-status-title">Uploading document…</div>
+                              <div className="upload-status-sub">{mainUploadingFileName || 'Processing your PDF'}</div>
+                            </div>
+                          </div>
+                          <div className="upload-progress-track">
+                            <div className="upload-progress-bar"></div>
+                          </div>
+                        </div>
+                      ) : null}
                   </div>
 
                   <div className={`upload-result ${mainResult ? 'visible' : ''}`} style={{marginTop:'1.25rem'}}>
