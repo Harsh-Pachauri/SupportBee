@@ -1,5 +1,6 @@
 import { getCompanyBySlug } from '../services/retrieval/companyLookup.js';
 import { runChat } from '../services/chat/chatFlow.js';
+import { createSupportRequest } from '../services/support/supportRequest.service.js';
 
 export async function getPublicCompanyInfo(req, res) {
   try {
@@ -48,5 +49,41 @@ export async function sendPublicChat(req, res) {
   } catch (err) {
     console.error('sendPublicChat error', err);
     return res.status(500).json({ message: 'Failed to process public chat', error: String(err) });
+  }
+}
+
+export async function createPublicSupportRequest(req, res) {
+  try {
+    const { companySlug } = req.params;
+    const { conversationId, email, phone, notes } = req.body;
+
+    if (!conversationId) {
+      return res.status(400).json({ message: 'conversationId is required.' });
+    }
+
+    const company = await getCompanyBySlug(companySlug);
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    const result = await createSupportRequest({
+      companyId: company.id,
+      conversationId,
+      email,
+      phone,
+      notes,
+    });
+
+    return res.status(result.created ? 201 : 200).json({
+      message: result.alreadySubmitted ? 'Support request already submitted' : 'Support request submitted',
+      company,
+      ...result,
+    });
+  } catch (err) {
+    console.error('createPublicSupportRequest error', err);
+    return res.status(err.statusCode || 500).json({
+      message: err.message || 'Failed to submit support request',
+      error: String(err),
+    });
   }
 }

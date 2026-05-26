@@ -284,6 +284,23 @@ input.has-error { border-color: #c0392b; }
 .conversation-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 1rem; gap: 0.75rem; }
 .conversation-placeholder h3 { font-family: var(--font-display); font-size: 1rem; }
 .conversation-placeholder p { font-size: 0.85rem; color: var(--gray-4); max-width: 320px; }
+.support-request-panel, .support-request-list-panel { margin-top: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--black-3); padding: 0.9rem; }
+.support-request-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 0.7rem; }
+.support-request-content { display: flex; flex-direction: column; gap: 8px; }
+.support-request-row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.82rem; }
+.support-request-row span { color: var(--gray-4); font-family: var(--font-mono); }
+.support-request-row strong { color: var(--gray-1); font-weight: 500; word-break: break-word; text-align: right; }
+.support-request-notes { font-size: 0.82rem; color: var(--gray-2); line-height: 1.55; background: var(--black-4); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.support-request-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.support-request-list { display: flex; flex-direction: column; gap: 8px; margin-top: 0.3rem; }
+.support-request-item { background: var(--black-4); border: 1px solid var(--border); color: var(--gray-2); border-radius: 8px; padding: 9px; text-align: left; cursor: pointer; transition: var(--transition); }
+.support-request-item:hover { border-color: var(--border-yellow); }
+.support-request-item.active { border-color: var(--border-yellow); background: var(--yellow-glow); }
+.support-request-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.support-request-item-status { font-size: 0.68rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--yellow); }
+.support-request-item-date { font-size: 0.68rem; font-family: var(--font-mono); color: var(--gray-5); }
+.support-request-item-contact { font-size: 0.8rem; color: var(--gray-2); margin-bottom: 4px; }
+.support-request-item-conversation { font-size: 0.68rem; color: var(--gray-5); font-family: var(--font-mono); word-break: break-all; }
 
 @media (max-width: 720px) {
   .docs-grid { grid-template-columns: 1fr; }

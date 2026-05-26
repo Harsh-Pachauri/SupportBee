@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPublicCompanyInfo, sendPublicChat } from '../services/chat.service.js';
+import { createPublicSupportRequest, getPublicCompanyInfo, sendPublicChat } from '../services/chat.service.js';
 
 function getSessionKey(companySlug) {
   return `supportbee:public-chat:${companySlug}`;
@@ -14,6 +14,12 @@ export default function PublicSupport() {
   const [conversationId, setConversationId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showFollowUpPrompt, setShowFollowUpPrompt] = useState(false);
+  const [followUpSubmitting, setFollowUpSubmitting] = useState(false);
+  const [followUpError, setFollowUpError] = useState('');
+  const [followUpSuccess, setFollowUpSuccess] = useState('');
+  const [followUpSubmitted, setFollowUpSubmitted] = useState(false);
+  const [followUpForm, setFollowUpForm] = useState({ email: '', phone: '', notes: '' });
 
   useEffect(() => {
     let mounted = true;
@@ -82,11 +88,46 @@ export default function PublicSupport() {
         setConversationId(result.conversationId);
       }
 
+      if (result?.escalation?.needed) {
+        setShowFollowUpPrompt(true);
+      }
+
       setMessages((current) => [...current, { role: 'assistant', message: result.answer }]);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleFollowUpSubmit(event) {
+    event.preventDefault();
+
+    if (!conversationId) {
+      setFollowUpError('Conversation is not ready yet. Please send one message first.');
+      return;
+    }
+
+    setFollowUpSubmitting(true);
+    setFollowUpError('');
+    setFollowUpSuccess('');
+
+    try {
+      const result = await createPublicSupportRequest(companySlug, {
+        conversationId,
+        email: followUpForm.email,
+        phone: followUpForm.phone,
+        notes: followUpForm.notes,
+      });
+
+      setFollowUpSubmitted(true);
+      setFollowUpSuccess(result.alreadySubmitted
+        ? 'You already shared contact details for this conversation. Our team will follow up.'
+        : 'Thanks. Your follow-up request has been submitted. A support representative may contact you soon.');
+    } catch (err) {
+      setFollowUpError(err.message);
+    } finally {
+      setFollowUpSubmitting(false);
     }
   }
 
@@ -138,6 +179,56 @@ export default function PublicSupport() {
               </div>
             ))
           )}
+
+          {showFollowUpPrompt ? (
+            <div className="followup-card">
+              <div className="followup-card-head">
+                <div className="followup-card-title">Need human follow-up?</div>
+                <div className="tag tag-yellow">optional</div>
+              </div>
+              <p className="followup-card-sub">
+                If you&apos;d like a support representative to contact you, share an email or phone number below.
+              </p>
+
+              <form className="followup-form" onSubmit={handleFollowUpSubmit}>
+                <input
+                  type="email"
+                  placeholder="Email (optional)"
+                  value={followUpForm.email}
+                  onChange={(e) => setFollowUpForm((current) => ({ ...current, email: e.target.value }))}
+                  disabled={followUpSubmitted || followUpSubmitting}
+                />
+                <input
+                  type="text"
+                  placeholder="Phone (optional)"
+                  value={followUpForm.phone}
+                  onChange={(e) => setFollowUpForm((current) => ({ ...current, phone: e.target.value }))}
+                  disabled={followUpSubmitted || followUpSubmitting}
+                />
+                <textarea
+                  placeholder="Anything else we should know? (optional)"
+                  value={followUpForm.notes}
+                  onChange={(e) => setFollowUpForm((current) => ({ ...current, notes: e.target.value }))}
+                  disabled={followUpSubmitted || followUpSubmitting}
+                  rows={2}
+                />
+
+                <div className="followup-actions">
+                  <button className="btn btn-primary" type="submit" disabled={followUpSubmitted || followUpSubmitting}>
+                    {followUpSubmitting ? 'Submitting…' : followUpSubmitted ? 'Submitted' : 'Request Follow-up'}
+                  </button>
+                  {followUpSubmitted ? (
+                    <button className="btn btn-ghost" type="button" onClick={() => setShowFollowUpPrompt(false)}>
+                      Hide
+                    </button>
+                  ) : null}
+                </div>
+              </form>
+
+              {followUpError ? <p className="error-text">{followUpError}</p> : null}
+              {followUpSuccess ? <p className="followup-success">{followUpSuccess}</p> : null}
+            </div>
+          ) : null}
         </div>
       </div>
 

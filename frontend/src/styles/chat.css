@@ -84,4 +84,14 @@ textarea#chat-textarea::placeholder{color:var(--gray-5)}
 .chat-send-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
 .chat-footer-hint{text-align:center;margin-top:0.6rem;font-size:0.68rem;color:var(--gray-5);font-family:var(--font-mono);letter-spacing:0.05em}
 
+.followup-card{margin-top:1rem;padding:1rem;border:1px solid var(--border-yellow);background:var(--black-3);border-radius:12px;display:flex;flex-direction:column;gap:0.7rem}
+.followup-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.followup-card-title{font-family:var(--font-display);font-size:1rem;font-weight:600}
+.followup-card-sub{font-size:0.82rem;color:var(--gray-3);line-height:1.6}
+.followup-form{display:flex;flex-direction:column;gap:0.6rem}
+.followup-form textarea{width:100%;background:var(--black-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--white);font-family:var(--font-body);font-size:0.9rem;font-weight:300;outline:none;transition:border-color var(--transition),background var(--transition);resize:vertical;min-height:72px}
+.followup-form textarea:focus{border-color:var(--border-yellow);background:var(--black-4)}
+.followup-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.followup-success{font-size:0.82rem;color:#2ecc71;font-family:var(--font-mono)}
+
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}

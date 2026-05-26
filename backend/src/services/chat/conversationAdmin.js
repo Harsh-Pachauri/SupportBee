@@ -50,7 +50,28 @@ function buildConversationSummary(conversation, messages = []) {
     message_count: messages.length,
     created_at: conversation.created_at || latestMessage?.created_at || null,
     updated_at: conversation.updated_at || latestMessage?.created_at || conversation.created_at || null,
+    support_request_submitted: Boolean(conversation.support_request_submitted),
+    support_request_status: conversation.support_request_status || null,
   };
+}
+
+async function fetchSupportRequests(companyId, conversationIds) {
+  if (!supabase || !companyId || !conversationIds.length) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('support_requests')
+    .select('id, company_id, conversation_id, email, phone, notes, status, created_at, updated_at')
+    .eq('company_id', companyId)
+    .in('conversation_id', conversationIds)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
 }
 
 async function fetchConversationMessages(companyId, conversationIds) {
@@ -144,6 +165,7 @@ export async function listCompanyConversations({ companyId, status = 'all', esca
   const conversationRows = conversations ?? [];
   const conversationIds = conversationRows.map((conversation) => conversation.id);
   const messageRows = await fetchConversationMessages(companyId, conversationIds);
+  const supportRequestRows = await fetchSupportRequests(companyId, conversationIds);
 
   const messagesByConversation = new Map();
   for (const message of messageRows) {
@@ -154,10 +176,25 @@ export async function listCompanyConversations({ companyId, status = 'all', esca
     messagesByConversation.get(message.conversation_id).push(message);
   }
 
+  const supportByConversation = new Map();
+  for (const request of supportRequestRows) {
+    if (!supportByConversation.has(request.conversation_id)) {
+      supportByConversation.set(request.conversation_id, request);
+    }
+  }
+
   const summaries = conversationRows
     .map((conversation) => {
       const messages = messagesByConversation.get(conversation.id) ?? [];
-      return buildConversationSummary(conversation, messages);
+      const supportRequest = supportByConversation.get(conversation.id);
+      return buildConversationSummary(
+        {
+          ...conversation,
+          support_request_submitted: Boolean(supportRequest),
+          support_request_status: supportRequest?.status || null,
+        },
+        messages
+      );
     })
     .sort((left, right) => new Date(right.updated_at || right.created_at || 0) - new Date(left.updated_at || left.created_at || 0));
 
@@ -226,7 +263,28 @@ export async function getCompanyConversationDetail({ companyId, conversationId }
     throw messagesError;
   }
 
-  const summary = buildConversationSummary(conversation, messages ?? []);
+  const { data: supportRequestRows, error: supportRequestError } = await supabase
+    .from('support_requests')
+    .select('id, company_id, conversation_id, email, phone, notes, status, created_at, updated_at')
+    .eq('company_id', companyId)
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (supportRequestError) {
+    throw supportRequestError;
+  }
+
+  const supportRequest = (supportRequestRows ?? [])[0] ?? null;
+
+  const summary = buildConversationSummary(
+    {
+      ...conversation,
+      support_request_submitted: Boolean(supportRequest),
+      support_request_status: supportRequest?.status || null,
+    },
+    messages ?? []
+  );
 
   console.log(`Conversation detail fetched for company ${companyId}: conversation=${conversationId}`);
 
@@ -237,6 +295,7 @@ export async function getCompanyConversationDetail({ companyId, conversationId }
     },
     messages: messages ?? [],
     summary,
+    supportRequest,
     source: 'supabase',
   };
 }

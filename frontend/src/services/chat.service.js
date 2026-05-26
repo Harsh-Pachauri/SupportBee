@@ -11,6 +11,13 @@ export function sendPublicChat(companySlug, payload) {
   });
 }
 
+export function createPublicSupportRequest(companySlug, payload) {
+  return requestJson(`/api/public/${companySlug}/support-request`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function sendInternalChat(payload) {
   return requestJson('/api/chat', {
     method: 'POST',

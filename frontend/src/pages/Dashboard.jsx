@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getStoredCompany, clearSession } from '../services/api.js';
 import { fetchDocuments, removeDocument, uploadDocument } from '../services/document.service.js';
 import { fetchConversationDetail, fetchConversations } from '../services/conversation.service.js';
+import { fetchSupportRequests, updateSupportRequest } from '../services/supportRequest.service.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,6 +29,11 @@ export default function Dashboard() {
   const [selectedConversationMessages, setSelectedConversationMessages] = useState([]);
   const [selectedConversationLoading, setSelectedConversationLoading] = useState(false);
   const [selectedConversationError, setSelectedConversationError] = useState('');
+  const [selectedSupportRequest, setSelectedSupportRequest] = useState(null);
+  const [supportRequests, setSupportRequests] = useState([]);
+  const [supportRequestsLoading, setSupportRequestsLoading] = useState(false);
+  const [supportRequestsError, setSupportRequestsError] = useState('');
+  const [supportRequestUpdateLoading, setSupportRequestUpdateLoading] = useState(false);
 
   function setDashTab(tab, ev) {
     setActiveTab(tab);
@@ -138,6 +144,7 @@ export default function Dashboard() {
         setSelectedConversationId('');
         setSelectedConversation(null);
         setSelectedConversationMessages([]);
+        setSelectedSupportRequest(null);
       }
     } catch (err) {
       setConversations([]);
@@ -161,12 +168,29 @@ export default function Dashboard() {
       const result = await fetchConversationDetail(conversationId);
       setSelectedConversation(result.conversation || result.summary || null);
       setSelectedConversationMessages(Array.isArray(result.messages) ? result.messages : []);
+      setSelectedSupportRequest(result.supportRequest || null);
     } catch (err) {
       setSelectedConversation(null);
       setSelectedConversationMessages([]);
+      setSelectedSupportRequest(null);
       setSelectedConversationError(err.message);
     } finally {
       setSelectedConversationLoading(false);
+    }
+  }
+
+  async function loadSupportRequests() {
+    setSupportRequestsLoading(true);
+    setSupportRequestsError('');
+
+    try {
+      const result = await fetchSupportRequests({ page: 1, limit: 30, status: 'all' });
+      setSupportRequests(Array.isArray(result.supportRequests) ? result.supportRequests : []);
+    } catch (err) {
+      setSupportRequests([]);
+      setSupportRequestsError(err.message);
+    } finally {
+      setSupportRequestsLoading(false);
     }
   }
 
@@ -179,6 +203,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTab === 'conversations') {
       loadConversations(conversationPage, conversationFilter);
+      loadSupportRequests();
     }
   }, [activeTab, conversationFilter, conversationPage]);
 
@@ -200,6 +225,26 @@ export default function Dashboard() {
   function formatConversationTime(value) {
     if (!value) return '—';
     return new Date(value).toLocaleString();
+  }
+
+  async function handleSupportRequestStatus(status) {
+    if (!selectedSupportRequest?.id) return;
+
+    setSupportRequestUpdateLoading(true);
+    setSelectedConversationError('');
+
+    try {
+      const result = await updateSupportRequest(selectedSupportRequest.id, { status });
+      setSelectedSupportRequest(result.supportRequest || null);
+      await loadSupportRequests();
+      if (selectedConversationId) {
+        await loadConversationDetail(selectedConversationId);
+      }
+    } catch (err) {
+      setSelectedConversationError(err.message);
+    } finally {
+      setSupportRequestUpdateLoading(false);
+    }
   }
 
   function openConversation(conversationId) {
@@ -552,6 +597,7 @@ export default function Dashboard() {
                                 <div className="conversation-badges">
                                   <span className="tag tag-gray">{conversation.message_count || 0} messages</span>
                                   {conversation.needs_human ? <span className="tag tag-yellow">escalated</span> : null}
+                                  {conversation.support_request_submitted ? <span className="tag tag-yellow">follow-up requested</span> : null}
                                   {conversation.latest_confidence_level ? (
                                     <span className={`confidence-badge ${conversation.latest_confidence_level}`}>
                                       {conversation.latest_confidence_level}
@@ -607,10 +653,41 @@ export default function Dashboard() {
                                 <span className={selectedConversation.needs_human ? 'tag tag-yellow' : 'tag tag-gray'}>
                                   {selectedConversation.needs_human ? 'escalated' : 'active'}
                                 </span>
+                                {selectedConversation.support_request_submitted ? (
+                                  <span className="tag tag-yellow">follow-up requested</span>
+                                ) : null}
                                 <span className="tag tag-gray">Created {formatConversationTime(selectedConversation.created_at)}</span>
                                 <span className="tag tag-gray">Updated {formatConversationTime(selectedConversation.updated_at)}</span>
                               </div>
                               <div className="conversation-preview">{selectedConversation.latest_message_preview || 'No recent preview available.'}</div>
+                            </div>
+
+                            <div className="support-request-panel">
+                              <div className="support-request-panel-head">
+                                <div className="card-title">Human follow-up request</div>
+                                <div className="tag tag-gray">async workflow</div>
+                              </div>
+                              {selectedSupportRequest ? (
+                                <div className="support-request-content">
+                                  <div className="support-request-row"><span>Email</span><strong>{selectedSupportRequest.email || '—'}</strong></div>
+                                  <div className="support-request-row"><span>Phone</span><strong>{selectedSupportRequest.phone || '—'}</strong></div>
+                                  <div className="support-request-row"><span>Status</span><strong>{selectedSupportRequest.status || 'pending'}</strong></div>
+                                  <div className="support-request-row"><span>Created</span><strong>{formatConversationTime(selectedSupportRequest.created_at)}</strong></div>
+                                  {selectedSupportRequest.notes ? (
+                                    <div className="support-request-notes">{selectedSupportRequest.notes}</div>
+                                  ) : null}
+                                  <div className="support-request-actions">
+                                    <button className="btn btn-ghost" type="button" disabled={supportRequestUpdateLoading} onClick={() => handleSupportRequestStatus('contacted')}>
+                                      Mark contacted
+                                    </button>
+                                    <button className="btn btn-primary" type="button" disabled={supportRequestUpdateLoading} onClick={() => handleSupportRequestStatus('resolved')}>
+                                      Mark resolved
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="muted-line">No contact request has been submitted for this conversation yet.</p>
+                              )}
                             </div>
 
                             <div className="conversation-message-list">
@@ -630,6 +707,37 @@ export default function Dashboard() {
                                   ) : null}
                                 </article>
                               ))}
+                            </div>
+
+                            <div className="support-request-list-panel">
+                              <div className="support-request-panel-head">
+                                <div className="card-title">Recent support requests</div>
+                                <div className="tag tag-gray">{supportRequests.length} items</div>
+                              </div>
+                              {supportRequestsLoading ? <p className="muted-line">Loading support requests...</p> : null}
+                              {supportRequestsError ? <p className="error-text">{supportRequestsError}</p> : null}
+                              {!supportRequestsLoading && !supportRequestsError && supportRequests.length === 0 ? (
+                                <p className="muted-line">No follow-up requests received yet.</p>
+                              ) : null}
+                              {supportRequests.length > 0 ? (
+                                <div className="support-request-list">
+                                  {supportRequests.slice(0, 8).map((request) => (
+                                    <button
+                                      key={request.id}
+                                      type="button"
+                                      className={`support-request-item ${selectedConversationId === request.conversation_id ? 'active' : ''}`}
+                                      onClick={() => openConversation(request.conversation_id)}
+                                    >
+                                      <div className="support-request-item-top">
+                                        <span className="support-request-item-status">{request.status}</span>
+                                        <span className="support-request-item-date">{formatConversationTime(request.created_at)}</span>
+                                      </div>
+                                      <div className="support-request-item-contact">{request.email || request.phone || 'Contact not available'}</div>
+                                      <div className="support-request-item-conversation">{request.conversation_id}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : null}
                             </div>
                           </>
                         ) : null}
