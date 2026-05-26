@@ -19,7 +19,9 @@ function TopBar() {
   return (
     <header className="topbar" role="banner">
       <a className="nav-logo" href="/" onClick={(e) => { e.preventDefault(); window.location.href = '/'; }}>
-        <span className="logo-mark">SB</span>
+        <span className="logo-mark logo-mark-image">
+          <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+        </span>
         <span>SupportBee</span>
       </a>
       <nav>

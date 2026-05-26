@@ -29,7 +29,9 @@ export default function Login() {
     <div className="page active" id="page-login" style={{ paddingTop: 64 }}>
       <nav>
         <a className="nav-logo" onClick={(e) => { e.preventDefault(); navigate('/'); }} href="#">
-          <div className="logo-mark">🐝</div>
+          <div className="logo-mark logo-mark-image">
+            <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+          </div>
           SupportBee
         </a>
         <div className="nav-actions">
@@ -37,13 +39,15 @@ export default function Login() {
         </div>
       </nav>
 
-      <div className="auth-page" style={{ paddingTop: 64, flex: 1 }}>
+      <div className="auth-page" style={{ paddingTop: 0, flex: 1 }}>
         <div className="auth-side">
           <div className="auth-side-bg"></div>
           <div className="auth-side-glow"></div>
           <div className="auth-side-content">
             <div className="nav-logo" style={{ marginBottom: '2.5rem', cursor: 'default' }}>
-              <div className="logo-mark">🐝</div>
+                <div className="logo-mark logo-mark-image">
+                  <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+                </div>
               SupportBee
             </div>
             <div className="auth-side-quote">Your AI support agent is<br /><em>one login away.</em></div>

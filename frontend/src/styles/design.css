@@ -40,6 +40,8 @@ body { background: var(--black); color: var(--white); font-family: var(--font-bo
 nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(10,10,10,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
 .nav-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; letter-spacing: -0.02em; cursor: pointer; text-decoration: none; color: var(--white); }
 .logo-mark { width: 30px; height: 30px; background: var(--yellow); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.logo-mark-image { padding: 3px; background: transparent; overflow: hidden; }
+.logo-image { width: 100%; height: 100%; object-fit: contain; display: block; }
 .nav-actions { display: flex; align-items: center; gap: 12px; }
 
 .btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-weight: 400; font-size: 0.875rem; padding: 8px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer; transition: var(--transition); text-decoration: none; letter-spacing: 0.01em; white-space: nowrap; }
@@ -57,7 +59,22 @@ nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; a
 /* HOMEPAGE */
 .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 2rem 80px; position: relative; overflow: hidden; }
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
-.hero-bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 80%); }
+.hero-bg-grid {
+  position: absolute;
+  inset: 0;
+
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='172' height='100' viewBox='0 0 172 100'%3E%3Cg stroke='rgba(255,210,90,0.10)' stroke-width='1'%3E%3Cpath fill='rgba(255,210,90,0.05)' d='M43 1 L85 25 L85 75 L43 99 L1 75 L1 25 Z'/%3E%3Cpath fill='transparent' d='M129 1 L171 25 L171 75 L129 99 L87 75 L87 25 Z'/%3E%3C/g%3E%3C/svg%3E");
+
+  background-size: 172px 100px;
+  background-repeat: repeat;
+
+  mask-image: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    black 30%,
+    transparent 80%
+  );
+}
 .hero-bg-glow { position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 700px; height: 500px; background: radial-gradient(ellipse, rgba(245,197,24,0.08) 0%, transparent 65%); pointer-events: none; }
 .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--black-3); border: 1px solid var(--border-yellow); border-radius: 100px; padding: 6px 14px; font-size: 0.8rem; color: var(--yellow); font-family: var(--font-mono); font-weight: 400; letter-spacing: 0.05em; margin-bottom: 2.5rem; position: relative; z-index: 1; }
 .badge-dot { width: 6px; height: 6px; background: var(--yellow); border-radius: 50%; animation: pulse 2s infinite; }

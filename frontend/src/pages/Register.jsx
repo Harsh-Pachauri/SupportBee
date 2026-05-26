@@ -36,10 +36,12 @@ export default function Register() {
   }
 
   return (
-    <div className="page active" id="page-register" style={{paddingTop:64}}>
+    <div className="page active" id="page-register" style={{paddingTop:0}}>
       <nav>
         <a className="nav-logo" onClick={(e)=>{e.preventDefault(); navigate('/')}} href="#">
-          <div className="logo-mark">🐝</div>
+          <div className="logo-mark logo-mark-image">
+            <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+          </div>
           SupportBee
         </a>
         <div className="nav-actions">
@@ -53,7 +55,9 @@ export default function Register() {
           <div className="auth-side-glow"></div>
           <div className="auth-side-content">
             <div className="nav-logo" style={{marginBottom:'2.5rem',cursor:'default'}}>
-              <div className="logo-mark">🐝</div>
+                <div className="logo-mark logo-mark-image">
+                  <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+                </div>
               SupportBee
             </div>
             <div className="auth-side-quote">From zero to live<br/><em>AI support in <span style={{fontStyle:'normal'}}>under 2 minutes.</span></em></div>

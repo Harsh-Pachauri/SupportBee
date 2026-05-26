@@ -5,10 +5,12 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="page active" id="page-home" style={{paddingTop:64}}>
+    <div className="page active" id="page-home" style={{paddingTop:0}}>
       <nav>
         <a className="nav-logo" onClick={(e)=>{e.preventDefault(); navigate('/')}} href="#">
-          <div className="logo-mark">🐝</div>
+          <div className="logo-mark logo-mark-image">
+            <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+          </div>
           SupportBee
         </a>
         <div className="nav-actions">
@@ -80,7 +82,9 @@ export default function Landing() {
 
         <footer>
           <div className="nav-logo" style={{fontSize:'0.9rem',cursor:'default'}}>
-            <div className="logo-mark" style={{width:24,height:24,fontSize:13}}>🐝</div>
+            <div className="logo-mark logo-mark-image" style={{width:24,height:24}}>
+              <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+            </div>
             SupportBee
           </div>
           <div>Built on pgvector · RAG · LLM · JWT</div>

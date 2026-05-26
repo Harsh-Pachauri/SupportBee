@@ -306,7 +306,9 @@ export default function Dashboard() {
     <div className="page active">
       <nav>
         <a className="nav-logo" onClick={(e) => { e.preventDefault(); navigate('/'); }} href="#">
-          <div className="logo-mark">🐝</div>
+          <div className="logo-mark logo-mark-image">
+            <img className="logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+          </div>
           SupportBee
         </a>
         <div className="nav-actions">

@@ -138,7 +138,9 @@ export default function PublicSupport() {
 
       <header className="chat-header">
         <div className="chat-header-brand">
-          <div className="chat-logo-mark">🐝</div>
+          <div className="chat-logo-mark chat-logo-mark-image">
+            <img className="chat-logo-image" src="/Logo.PNG" alt="SupportBee logo" />
+          </div>
           <div>
             <div className="chat-company-name">{company?.company_name || companySlug}</div>
             <div className="chat-company-slug">/{company?.slug || companySlug}</div>
