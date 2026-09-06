@@ -30,18 +30,7 @@ export async function uploadToSupabase(fileName, buffer, companyId = 'public') {
 
     return { storageUrl: publicData.publicUrl, path: safePath };
   } catch (err) {
-    const isMissingBucket = err?.statusCode === 404 || err?.status === 400 || /Bucket not found/i.test(err?.message || '');
-
-    if (!isMissingBucket) {
-      console.error('uploadToSupabase error', err);
-    } else {
-      console.warn('Supabase Storage bucket "documents" is missing. Using fallback storage URL.');
-    }
-
-    return {
-      storageUrl: buildFallbackStorageUrl(companyId, fileName),
-      path: null,
-      error: String(err),
-    };
+    console.error('uploadToSupabase error', err);
+    throw new Error(`Storage upload failed: ${err?.message || String(err)}`);
   }
 }

@@ -17,19 +17,5 @@ export async function getCompanyBySlug(companySlug) {
     throw bySlug.error;
   }
 
-  if (bySlug.data) {
-    return bySlug.data;
-  }
-
-  const byId = await supabase
-    .from('companies')
-    .select('id, slug, company_name')
-    .eq('id', companySlug)
-    .maybeSingle();
-
-  if (byId.error) {
-    throw byId.error;
-  }
-
-  return byId.data ?? null;
+  return bySlug.data ?? null;
 }
