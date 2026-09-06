@@ -13,10 +13,10 @@ export async function saveDocumentChunks({ companyId, documentId, chunks }) {
     chunk_index: chunk.chunkIndex,
   }));
 
-  const { error } = await supabase.from('document_chunks').insert(rows);
-
-  if (error) {
-    throw error;
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const { error } = await supabase.from('document_chunks').insert(rows.slice(i, i + BATCH_SIZE));
+    if (error) throw error;
   }
 
   return { saved: rows.length, skipped: false };
