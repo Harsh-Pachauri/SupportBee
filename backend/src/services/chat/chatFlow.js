@@ -40,6 +40,7 @@ export async function runChat({ companyId, message, conversationId = null, topK 
   });
   const context = buildContext(retrieval.chunks);
   const prompt = buildPrompt({ history: historyText, context, question: message });
+  const promptFull = prompt.full;
 
   ragDebug('Retrieval', 'Chat request summary', {
     conversationId: activeConversationId,
@@ -107,7 +108,7 @@ export async function runChat({ companyId, message, conversationId = null, topK 
     },
     retrieval,
     context,
-    prompt,
+    prompt: promptFull,
     recentMessages,
     historyText,
     memoryLimit,

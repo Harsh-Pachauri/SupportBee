@@ -8,7 +8,6 @@ export function isMissingColumnError(error, columnName) {
   }
 
   return (
-    code === 'PGRST204' ||
     (message.includes('column') && message.includes(normalizedColumn) && message.includes('does not exist')) ||
     (message.includes('could not find') && message.includes(normalizedColumn))
   );

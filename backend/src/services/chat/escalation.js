@@ -4,15 +4,16 @@ import { isMissingColumnError } from './schemaCompatibility.js';
 import { ragDebug } from '../../utils/ragDebug.js';
 
 export function evaluateEscalation(confidence, thresholds = getConfidenceThresholds()) {
-  const evaluatedConfidence = classifyConfidence(confidence?.score ?? confidence ?? 0, thresholds, {
-    log: false,
-    context: 'escalation-evaluation',
-  });
+  // Accept a pre-classified {level, score, ...} object or a raw numeric score.
+  const classified =
+    confidence !== null && typeof confidence === 'object' && typeof confidence.level === 'string'
+      ? confidence
+      : classifyConfidence(confidence ?? 0, thresholds, { log: false, context: 'escalation-evaluation' });
 
   return {
-    ...evaluatedConfidence,
-    needed: evaluatedConfidence.level === 'low',
-    state: evaluatedConfidence.level === 'low' ? 'escalated' : 'active',
+    ...classified,
+    needed: classified.level === 'low',
+    state: classified.level === 'low' ? 'escalated' : 'active',
   };
 }
 

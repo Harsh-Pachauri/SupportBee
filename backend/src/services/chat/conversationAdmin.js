@@ -74,16 +74,21 @@ async function fetchSupportRequests(companyId, conversationIds) {
   return data ?? [];
 }
 
+const SUMMARY_MESSAGES_CAP = 200;
+
 async function fetchConversationMessages(companyId, conversationIds) {
   if (!supabase || !companyId || !conversationIds.length) {
     return [];
   }
 
+  // Load only the most-recent messages to build list-page summaries.
+  // Fetching without a limit across many busy conversations causes OOM.
   const { data, error } = await supabase
     .from('messages')
     .select('id, conversation_id, role, message, confidence_score, created_at')
     .in('conversation_id', conversationIds)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false })
+    .limit(SUMMARY_MESSAGES_CAP);
 
   if (error) {
     throw error;
