@@ -19,7 +19,6 @@ export async function listCompanySupportRequests(req, res) {
     console.error('listCompanySupportRequests error', err);
     return res.status(err.statusCode || 500).json({
       message: err.message || 'Failed to load support requests',
-      error: String(err),
     });
   }
 }
@@ -44,7 +43,6 @@ export async function patchCompanySupportRequest(req, res) {
     console.error('patchCompanySupportRequest error', err);
     return res.status(err.statusCode || 500).json({
       message: err.message || 'Failed to update support request',
-      error: String(err),
     });
   }
 }

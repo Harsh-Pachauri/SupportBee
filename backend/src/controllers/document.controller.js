@@ -36,7 +36,7 @@ export async function uploadDocument(req, res) {
     if (supabase && documentRecord && uploadResult.storageUrl) {
       const { error: updErr } = await supabase
         .from('documents')
-        .update({ storage_url: uploadResult.storageUrl, status: 'ready' })
+        .update({ storage_url: uploadResult.storageUrl, status: 'processed' })
         .eq('id', documentRecord.id);
 
       if (updErr) console.warn('Failed to update document record after upload:', updErr.message || updErr);
@@ -69,7 +69,7 @@ export async function uploadDocument(req, res) {
     });
   } catch (err) {
     console.error('uploadDocument error', err);
-    return res.status(500).json({ message: 'Failed to process document', error: String(err) });
+    return res.status(500).json({ message: 'Failed to process document' });
   }
 }
 
@@ -125,7 +125,7 @@ export async function listDocuments(req, res) {
     });
   } catch (err) {
     console.error('listDocuments error', err);
-    return res.status(500).json({ message: 'Failed to list documents', error: String(err) });
+    return res.status(500).json({ message: 'Failed to list documents' });
   }
 }
 
@@ -159,6 +159,6 @@ export async function deleteDocument(req, res) {
     return res.json({ deleted: true, documentId, companyId });
   } catch (err) {
     console.error('deleteDocument error', err);
-    return res.status(500).json({ message: 'Failed to delete document', error: String(err) });
+    return res.status(500).json({ message: 'Failed to delete document' });
   }
 }

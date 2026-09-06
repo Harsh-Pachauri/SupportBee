@@ -17,7 +17,7 @@ export async function getPublicCompanyInfo(req, res) {
     });
   } catch (err) {
     console.error('getPublicCompanyInfo error', err);
-    return res.status(500).json({ message: 'Failed to load company info', error: String(err) });
+    return res.status(500).json({ message: 'Failed to load company info' });
   }
 }
 
@@ -43,12 +43,14 @@ export async function sendPublicChat(req, res) {
 
     return res.json({
       message: 'Public chat completed',
-      company,
-      ...result,
+      conversationId: result.conversationId,
+      answer: result.answer,
+      confidence: result.confidence,
+      escalation: result.escalation,
     });
   } catch (err) {
     console.error('sendPublicChat error', err);
-    return res.status(500).json({ message: 'Failed to process public chat', error: String(err) });
+    return res.status(500).json({ message: 'Failed to process public chat' });
   }
 }
 
@@ -76,14 +78,14 @@ export async function createPublicSupportRequest(req, res) {
 
     return res.status(result.created ? 201 : 200).json({
       message: result.alreadySubmitted ? 'Support request already submitted' : 'Support request submitted',
-      company,
-      ...result,
+      supportRequest: result.supportRequest,
+      created: result.created,
+      alreadySubmitted: result.alreadySubmitted,
     });
   } catch (err) {
     console.error('createPublicSupportRequest error', err);
     return res.status(err.statusCode || 500).json({
       message: err.message || 'Failed to submit support request',
-      error: String(err),
     });
   }
 }

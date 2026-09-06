@@ -4,7 +4,9 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {
-  console.warn('Supabase environment variables are not fully configured yet.');
+  throw new Error(
+    'Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set.'
+  );
 }
 
 let realtimeTransport;
@@ -21,16 +23,8 @@ if (!globalThis.WebSocket) {
   }
 }
 
-let supabaseClient = null;
-
-if (supabaseUrl && supabaseServiceRoleKey) {
-  try {
-    supabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      realtime: realtimeTransport ? { transport: realtimeTransport } : undefined,
-    });
-  } catch (err) {
-    console.warn('Supabase client initialization failed:', err.message || err);
-  }
-}
+const supabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  realtime: realtimeTransport ? { transport: realtimeTransport } : undefined,
+});
 
 export const supabase = supabaseClient;

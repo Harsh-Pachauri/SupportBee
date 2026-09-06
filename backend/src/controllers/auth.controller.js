@@ -54,7 +54,7 @@ export async function register(req, res) {
         error: err.message,
       });
     }
-    return res.status(500).json({ message: 'Failed to register company', error: String(err) });
+    return res.status(500).json({ message: 'Failed to register company' });
   }
 }
 
@@ -101,34 +101,16 @@ export async function login(req, res) {
         error: err.message,
       });
     }
-    return res.status(500).json({ message: 'Failed to log in', error: String(err) });
+    return res.status(500).json({ message: 'Failed to log in' });
   }
 }
 
 export async function me(req, res) {
   try {
-    const header = req.headers.authorization || '';
-    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-
-    if (!token) {
-      return res.status(401).json({ message: 'Authorization token is required.' });
-    }
-
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      return res.status(500).json({ message: 'JWT_SECRET is not configured.' });
-    }
-
-    const payload = jwt.verify(token, secret);
-
-    if (!supabase) {
-      return res.json({ company: payload, source: 'offline' });
-    }
-
     const { data, error } = await supabase
       .from('companies')
       .select('id, company_name, slug, email, created_at')
-      .eq('id', payload.companyId)
+      .eq('id', req.auth.companyId)
       .maybeSingle();
 
     if (error) {
@@ -148,6 +130,6 @@ export async function me(req, res) {
         error: err.message,
       });
     }
-    return res.status(401).json({ message: 'Invalid or expired token.' });
+    return res.status(500).json({ message: 'Failed to fetch company profile.' });
   }
 }

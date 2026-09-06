@@ -14,11 +14,14 @@ export async function createChat(req, res) {
 
     return res.json({
       message: 'Chat completed',
-      ...result,
+      conversationId: result.conversationId,
+      answer: result.answer,
+      confidence: result.confidence,
+      escalation: result.escalation,
     });
   } catch (err) {
     console.error('createChat error', err);
-    return res.status(500).json({ message: 'Failed to process chat', error: String(err) });
+    return res.status(500).json({ message: 'Failed to process chat' });
   }
 }
 
@@ -41,7 +44,7 @@ export async function listConversations(req, res) {
     return res.json(result);
   } catch (err) {
     console.error('listConversations error', err);
-    return res.status(500).json({ message: 'Failed to load conversations', error: String(err) });
+    return res.status(500).json({ message: 'Failed to load conversations' });
   }
 }
 
@@ -62,6 +65,6 @@ export async function getConversation(req, res) {
     return res.json(result);
   } catch (err) {
     console.error('getConversation error', err);
-    return res.status(500).json({ message: 'Failed to load conversation', error: String(err) });
+    return res.status(500).json({ message: 'Failed to load conversation' });
   }
 }
