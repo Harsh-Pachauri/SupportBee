@@ -26,6 +26,9 @@ export async function generate(prompt) {
     throw new Error('GROQ_API_KEY is not configured');
   }
 
+  const systemContent = prompt?.system ?? '';
+  const userContent = prompt?.user ?? prompt?.full ?? String(prompt);
+
   const startedAt = Date.now();
   const response = await fetch(GROQ_API_URL, {
     method: 'POST',
@@ -35,7 +38,10 @@ export async function generate(prompt) {
     },
     body: JSON.stringify({
       model,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: systemContent },
+        { role: 'user', content: userContent },
+      ],
       temperature: 0.2,
     }),
   });

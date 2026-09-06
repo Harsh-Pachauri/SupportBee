@@ -26,10 +26,14 @@ export async function generate(prompt) {
     throw new Error('Unable to load GoogleGenAI client');
   }
 
+  const systemContent = prompt?.system ?? '';
+  const userContent = prompt?.user ?? prompt?.full ?? String(prompt);
+
   const client = new GoogleGenAI({ apiKey });
   const response = await client.models.generateContent({
     model,
-    contents: prompt,
+    systemInstruction: systemContent || undefined,
+    contents: userContent,
   });
 
   const text = response?.text || response?.candidates?.[0]?.content?.parts?.map((part) => part?.text || '').join('') || '';

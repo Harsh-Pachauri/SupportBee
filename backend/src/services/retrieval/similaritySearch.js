@@ -138,7 +138,8 @@ export async function similaritySearch({ companyId, query, topK = 5 }) {
   const { data, error } = await supabase
     .from('document_chunks')
     .select('id, company_id, document_id, chunk_text, embedding, chunk_index, created_at')
-    .eq('company_id', companyId);
+    .eq('company_id', companyId)
+    .limit(1000);
 
   if (error) {
     throw error;

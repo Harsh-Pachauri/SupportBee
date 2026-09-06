@@ -29,6 +29,7 @@ export function getActiveLlmProvider() {
   return getConfiguredProviderName();
 }
 
+// prompt must be a {system, user, full} object from buildPrompt.
 export async function generateResponse(prompt) {
   const configuredProvider = getConfiguredProviderName();
   const provider = getProviderModule(configuredProvider);
