@@ -58,42 +58,47 @@ Customer asks question  →  Query embedded  →  cosine similarity search
 ```mermaid
 graph TB
     subgraph Clients
-        W[Embeddable Widget<br/>any origin]
-        D[Dashboard<br/>company.app.com]
+        W[Embeddable Widget - any origin]
+        D[Dashboard - company.app.com]
     end
 
-    subgraph Express API
+    subgraph API["Express API"]
         H[GET /health]
-        subgraph Public Routes — CORS *
+        subgraph pub["Public Routes - CORS wildcard"]
             P1[GET /api/public/:slug/info]
             P2[POST /api/public/:slug/chat]
             P3[POST /api/public/:slug/support-request]
         end
-        subgraph Authenticated Routes — CORS restricted
+        subgraph priv["Authenticated Routes - CORS restricted"]
             A1[POST /api/auth/register]
             A2[POST /api/auth/login]
-            A3[GET  /api/auth/me]
-            DOC[POST /api/documents/upload<br/>GET  /api/documents<br/>DELETE /api/documents/:id]
-            C1[POST /api/chat<br/>GET  /api/chat/conversations<br/>GET  /api/chat/conversations/:id]
-            SR[GET  /api/support-requests<br/>PATCH /api/support-requests/:id]
+            A3[GET /api/auth/me]
+            DOC[POST /api/documents/upload - GET - DELETE]
+            C1[POST /api/chat - GET /api/chat/conversations]
+            SR[GET /api/support-requests - PATCH /:id]
         end
     end
 
     subgraph Services
-        RAG[RAG Pipeline<br/>chatFlow.js]
-        ING[Ingestion<br/>processDocument.js]
-        EMB[Embeddings<br/>Xenova / local]
-        LLM[LLM<br/>Groq · Gemini]
-        SIM[Similarity Search<br/>pgvector RPC]
+        RAG[RAG Pipeline - chatFlow.js]
+        ING[Ingestion - processDocument.js]
+        EMB[Embeddings - Xenova local]
+        LLM[LLM - Groq or Gemini]
+        SIM[Similarity Search - pgvector RPC]
     end
 
     subgraph Storage
-        SB[(Supabase<br/>PostgreSQL + pgvector)]
-        ST[(Supabase Storage<br/>documents bucket)]
+        SB[(Supabase PostgreSQL + pgvector)]
+        ST[(Supabase Storage - documents bucket)]
     end
 
-    W -->|widget CORS *| P2
-    D -->|dashboard CORS| A1 & A2 & A3 & DOC & C1 & SR
+    W -->|widget CORS open| P2
+    D -->|dashboard CORS| A1
+    D --> A2
+    D --> A3
+    D --> DOC
+    D --> C1
+    D --> SR
 
     P2 --> RAG
     C1 --> RAG
@@ -109,7 +114,9 @@ graph TB
     SIM --> SB
     ING --> SB
     RAG --> SB
-    A1 & A2 & A3 --> SB
+    A1 --> SB
+    A2 --> SB
+    A3 --> SB
     SR --> SB
 ```
 
@@ -119,38 +126,38 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant U as User / Widget
+    participant U as User/Widget
     participant API as Express API
-    participant E as Embedding Model<br/>(local, 384-dim)
-    participant DB as pgvector<br/>(Supabase)
-    participant L as LLM<br/>(Groq / Gemini)
+    participant E as Embedding Model
+    participant DB as pgvector
+    participant L as LLM
 
     Note over U,L: Ingestion (one-time per document)
     U->>API: POST /api/documents/upload (PDF)
-    API->>API: Extract text (pdf-parse)
+    API->>API: Extract text via pdf-parse
     API->>API: Chunk text (1000 chars, 200 overlap)
     loop each chunk
         API->>E: generateEmbedding(chunk)
         E-->>API: float32[384]
     end
     API->>DB: INSERT document_chunks (batch 50)
-    API-->>U: { chunkCount, storage }
+    API-->>U: chunkCount + storage URL
 
     Note over U,L: Chat (per message)
-    U->>API: POST /api/public/:slug/chat { message }
+    U->>API: POST /api/public/:slug/chat
     API->>E: generateEmbedding(message)
     E-->>API: float32[384]
-    API->>DB: match_document_chunks(company_id, query_embedding, topK=5)
-    DB-->>API: chunks ordered by cosine similarity
-    API->>API: buildPrompt(history, chunks, question)
-    API->>L: { system, user } messages
+    API->>DB: match_document_chunks(company_id, embedding, 5)
+    DB-->>API: top-5 chunks by cosine similarity
+    API->>API: buildPrompt(history + chunks + question)
+    API->>L: system + user messages
     L-->>API: answer text
     API->>API: classifyConfidence(topScore)
-    API->>DB: INSERT messages (user + assistant)
-    alt confidence = low
+    API->>DB: INSERT messages
+    alt confidence is low
         API->>DB: UPDATE conversations SET needs_human=true
     end
-    API-->>U: { answer, confidence, escalation }
+    API-->>U: answer + confidence + escalation
 ```
 
 ---
