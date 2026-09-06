@@ -8,9 +8,14 @@ import publicRoutes from './routes/public.routes.js';
 import supportRequestRoutes from './routes/supportRequest.routes.js';
 import { notFoundHandler, errorHandler } from './middleware/error.middleware.js';
 
+// Public widget routes need wildcard CORS — the widget is embedded on arbitrary customer sites.
+// Authenticated routes are restricted to the configured dashboard origin (defaults to '*' if
+// CORS_ORIGIN is not set, preserving backward compatibility during development).
+const widgetCors = cors({ origin: '*' });
+const dashboardCors = cors({ origin: process.env.CORS_ORIGIN || '*' });
+
 const app = express();
 
-app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -18,11 +23,11 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'supportbee-backend' });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/public', publicRoutes);
-app.use('/api/support-requests', supportRequestRoutes);
+app.use('/api/auth', dashboardCors, authRoutes);
+app.use('/api/documents', dashboardCors, documentRoutes);
+app.use('/api/chat', dashboardCors, chatRoutes);
+app.use('/api/public', widgetCors, publicRoutes);
+app.use('/api/support-requests', dashboardCors, supportRequestRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

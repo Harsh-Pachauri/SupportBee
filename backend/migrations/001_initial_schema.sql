@@ -23,7 +23,7 @@ CREATE TABLE document_chunks (
   company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
   document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
   chunk_text TEXT NOT NULL,
-  embedding VECTOR(768),
+  embedding VECTOR(384),
   chunk_index INT,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -61,7 +61,7 @@ CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
 
 CREATE OR REPLACE FUNCTION match_document_chunks(
   match_company_id UUID,
-  query_embedding VECTOR(768),
+  query_embedding VECTOR(384),
   match_count INT DEFAULT 5
 )
 RETURNS TABLE (
@@ -69,7 +69,7 @@ RETURNS TABLE (
   company_id UUID,
   document_id UUID,
   chunk_text TEXT,
-  embedding VECTOR(768),
+  embedding VECTOR(384),
   chunk_index INT,
   created_at TIMESTAMP,
   score FLOAT
